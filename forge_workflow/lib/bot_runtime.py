@@ -270,15 +270,96 @@ def stop_container(bot_name: str, *, graceful: bool = True) -> None:
 # ---------------------------------------------------------------------------
 
 
-def _ensure_image() -> None:
-    """Check the Docker image exists. Raise if not."""
-    ok, _ = _docker_run_ok(["image", "inspect", IMAGE_NAME])
-    if ok:
-        return
-    raise DockerError(
-        f"Docker image '{IMAGE_NAME}' not found. "
-        f"Build it with: docker build -t {IMAGE_NAME} docker/claude-dev/"
+BUILD_HASH_LABEL = "forge_build_hash"
+
+
+def _compute_build_hash(docker_dir: Path) -> str:
+    """Hash Dockerfile + entrypoint.sh to detect when a rebuild is needed."""
+    import hashlib
+
+    h = hashlib.sha256()
+    for name in ("Dockerfile", "entrypoint.sh"):
+        f = docker_dir / name
+        if f.is_file():
+            h.update(f.read_bytes())
+    return h.hexdigest()[:16]
+
+
+def _get_image_hash() -> Optional[str]:
+    """Read the build hash label from the existing Docker image."""
+    ok, stdout = _docker_run_ok([
+        "inspect", "--format",
+        "{{index .Config.Labels \"" + BUILD_HASH_LABEL + "\"}}",
+        IMAGE_NAME,
+    ])
+    if not ok:
+        return None
+    value = stdout.strip()
+    return value if value and value != "<no value>" else None
+
+
+def _build_image(docker_dir: Path, build_hash: str) -> None:
+    """Build the Docker image with a build hash label."""
+    _docker_run(
+        [
+            "build",
+            "-t", IMAGE_NAME,
+            "--label", f"{BUILD_HASH_LABEL}={build_hash}",
+            str(docker_dir),
+        ],
+        timeout=600,
     )
+
+
+def _find_docker_dir() -> Path:
+    """Locate docker/claude-dev/ relative to .forge/config.yaml."""
+    from forge_workflow import config as forge_config
+
+    root = forge_config._find_repo_root()
+    if root is None:
+        raise DockerError("No .forge/config.yaml found — cannot locate Dockerfile.")
+    docker_dir = root / "docker" / "claude-dev"
+    if not (docker_dir / "Dockerfile").is_file():
+        raise DockerError(
+            f"Dockerfile not found at {docker_dir}/Dockerfile. "
+            "Run 'forge init' to scaffold Docker files."
+        )
+    return docker_dir
+
+
+def _ensure_image() -> None:
+    """Build or rebuild the Docker image when needed.
+
+    - No image → auto-build from docker/claude-dev/Dockerfile
+    - Image exists but hash mismatch → rebuild (Dockerfile changed)
+    - Image exists and hash matches → no-op
+    """
+    import sys
+
+    docker_dir = _find_docker_dir()
+    current_hash = _compute_build_hash(docker_dir)
+    image_hash = _get_image_hash()
+
+    if image_hash == current_hash:
+        return  # Image is up to date
+
+    image_exists, _ = _docker_run_ok(["image", "inspect", IMAGE_NAME])
+
+    if not image_exists:
+        print(f"  Building Docker image '{IMAGE_NAME}' from {docker_dir}...", file=sys.stderr)
+    elif image_hash is None:
+        print(
+            f"  Rebuilding '{IMAGE_NAME}' (no build hash — upgrading to tracked builds)...",
+            file=sys.stderr,
+        )
+    else:
+        print(
+            f"  Rebuilding '{IMAGE_NAME}' (Dockerfile changed: {image_hash} → {current_hash})...",
+            file=sys.stderr,
+        )
+
+    _build_image(docker_dir, current_hash)
+    print(f"  Image '{IMAGE_NAME}' ready (hash: {current_hash}).", file=sys.stderr)
 
 
 def _ensure_container(
