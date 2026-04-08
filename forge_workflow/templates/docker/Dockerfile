@@ -45,8 +45,8 @@ USER root
 RUN npm uninstall -g @anthropic-ai/claude-code
 ENV PATH="/home/claude/.local/bin:${PATH}"
 
-# Install Python tooling (ruff for formatting hook)
-RUN pip3 install ruff --break-system-packages
+# Install Python tooling (ruff for formatting hook) and forge-workflow
+RUN pip3 install ruff "forge-workflow @ git+https://github.com/jp5labs/forge-workflow.git@v0.1.0" --break-system-packages
 
 # Pre-seed GitHub SSH known_hosts for both root and claude users
 RUN mkdir -p /root/.ssh /home/claude/.ssh \
