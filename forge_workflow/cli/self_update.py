@@ -9,10 +9,7 @@ import typer
 from forge_workflow import __version__
 from forge_workflow.lib.version_check import REPO_URL
 
-app = typer.Typer(no_args_is_help=False)
 
-
-@app.command("self-update")
 def self_update(
     version: str = typer.Option(
         None,
