@@ -8,11 +8,11 @@ GitHub issue.
 Exits 0 always (best-effort) -- posting failure must not block the
 agent's approval flow.
 """
-import sys
 import json
-import subprocess
 import os
 import re
+import subprocess
+import sys
 from pathlib import Path
 
 

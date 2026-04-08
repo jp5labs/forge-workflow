@@ -16,7 +16,6 @@ import json
 import re
 import sys
 
-
 # ${...} pattern -- match ${ followed by any content and closing }
 # Exclude $() which is handled by compound_command_interceptor.py
 SHELL_VAR_EXPANSION = re.compile(r"\$\{[^}]*\}")

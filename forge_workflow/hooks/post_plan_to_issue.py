@@ -7,9 +7,9 @@ it to the GitHub issue so it's visible before the user approves in Claude Code.
 
 Exits 0 always (best-effort) -- GitHub post failure must not block plan approval.
 """
-import sys
 import json
 import subprocess
+import sys
 from pathlib import Path
 
 

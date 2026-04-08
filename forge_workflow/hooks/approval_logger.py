@@ -7,11 +7,10 @@ to /tmp/forge-approval-log.jsonl for later analysis by /approval-hygiene.
 
 Always exits 0 -- observational only, never blocks.
 """
+import json
 import os
 import sys
-import json
 from datetime import datetime, timezone
-
 
 LOG_PATH = "/tmp/forge-approval-log.jsonl"
 MAX_INPUT_LEN = 1024

@@ -11,7 +11,6 @@ import pytest
 
 from forge_workflow.hooks.secret_detection import check_for_secrets
 
-
 # ---------------------------------------------------------------------------
 # Helpers — build synthetic secret strings at runtime so the secret-file
 # scanner hook does not flag *this* test file during writes.

@@ -201,7 +201,10 @@ def main():
         # Return structured output with decision
         output = {
             "decision": "block",
-            "reason": f"\U0001f6e1\ufe0f {reason}\nFile: {file_path}\nUse --force or edit manually if you really need to modify this file."
+            "reason": (
+                f"\U0001f6e1\ufe0f {reason}\nFile: {file_path}\n"
+                "Use --force or edit manually if you really need to modify this file."
+            )
         }
         print(json.dumps(output))
         sys.exit(0)
