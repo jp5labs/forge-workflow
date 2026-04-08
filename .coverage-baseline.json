@@ -1,0 +1,13 @@
+{
+  "threshold": 50.0,
+  "updated": "2026-04-08",
+  "note": "Branch coverage for forge_workflow/. Global threshold must not decrease unless PR has the 'code-port' label. Per-module floors are enforced independently. Safety-critical hooks have elevated floors to prevent regression.",
+  "module_floors": {
+    "forge_workflow/hooks/compound_command_interceptor.py": 90.0,
+    "forge_workflow/hooks/file_protection.py": 90.0,
+    "forge_workflow/hooks/secret_detection.py": 85.0,
+    "forge_workflow/hooks/secret_file_scanner.py": 90.0,
+    "forge_workflow/hooks/destructive_git_halt.py": 60.0,
+    "forge_workflow/hooks/block_commit_to_main.py": 33.0
+  }
+}
