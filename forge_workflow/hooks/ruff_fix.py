@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """PostToolUse hook: run ruff --fix on edited Python files."""
-import sys
 import json
-import subprocess
 import os
+import subprocess
+import sys
 
 
 def main():

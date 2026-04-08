@@ -7,10 +7,10 @@ and the current branch is main or master (exit 2).
 Exits 2 (blocking) when committing to main.
 Exits 0 (pass-through) for all other commands.
 """
-import sys
 import json
-import subprocess
 import re
+import subprocess
+import sys
 
 BLOCK_MESSAGE = """\
 [HOOK] Direct commit to main blocked.

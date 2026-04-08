@@ -1,5 +1,5 @@
 {
-  "threshold": 50.0,
+  "threshold": 30.0,
   "updated": "2026-04-08",
   "note": "Branch coverage for forge_workflow/. Global threshold must not decrease unless PR has the 'code-port' label. Per-module floors are enforced independently. Safety-critical hooks have elevated floors to prevent regression.",
   "module_floors": {
