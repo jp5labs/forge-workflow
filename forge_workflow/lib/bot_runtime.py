@@ -13,9 +13,26 @@ class DockerError(RuntimeError):
     """Raised when a Docker operation fails."""
 
 
-IMAGE_NAME = "claude-workspace"
+IMAGE_NAME_DEFAULT = "claude-workspace"
 GRACEFUL_TIMEOUT = 30
 SIGTERM_TIMEOUT = 10
+
+
+def _image_name() -> str:
+    """Derive Docker image name from .forge/config.yaml repo name.
+
+    Returns 'claude-workspace-<repo_name>' if config is available,
+    falls back to 'claude-workspace' if not.
+    """
+    try:
+        from forge_workflow import config as forge_config
+
+        repo_name = forge_config.get("repo.name")
+        if repo_name:
+            return f"claude-workspace-{repo_name}"
+    except Exception:
+        pass
+    return IMAGE_NAME_DEFAULT
 
 # Default plugins to install in bot containers
 DEFAULT_PLUGINS = [
@@ -186,7 +203,7 @@ def create_container(
         "-v", f"{vols['tailscale']}:/var/lib/tailscale",
         *env_args,
         "--restart", "unless-stopped",
-        IMAGE_NAME,
+        _image_name(),
     ], timeout=60)
 
 
@@ -290,7 +307,7 @@ def _get_image_hash() -> Optional[str]:
     ok, stdout = _docker_run_ok([
         "inspect", "--format",
         "{{index .Config.Labels \"" + BUILD_HASH_LABEL + "\"}}",
-        IMAGE_NAME,
+        _image_name(),
     ])
     if not ok:
         return None
@@ -300,10 +317,11 @@ def _get_image_hash() -> Optional[str]:
 
 def _build_image(docker_dir: Path, build_hash: str) -> None:
     """Build the Docker image with a build hash label."""
+    name = _image_name()
     _docker_run(
         [
             "build",
-            "-t", IMAGE_NAME,
+            "-t", name,
             "--label", f"{BUILD_HASH_LABEL}={build_hash}",
             str(docker_dir),
         ],
@@ -336,6 +354,7 @@ def _ensure_image() -> None:
     """
     import sys
 
+    name = _image_name()
     docker_dir = _find_docker_dir()
     current_hash = _compute_build_hash(docker_dir)
     image_hash = _get_image_hash()
@@ -343,23 +362,23 @@ def _ensure_image() -> None:
     if image_hash == current_hash:
         return  # Image is up to date
 
-    image_exists, _ = _docker_run_ok(["image", "inspect", IMAGE_NAME])
+    image_exists, _ = _docker_run_ok(["image", "inspect", name])
 
     if not image_exists:
-        print(f"  Building Docker image '{IMAGE_NAME}' from {docker_dir}...", file=sys.stderr)
+        print(f"  Building Docker image '{name}' from {docker_dir}...", file=sys.stderr)
     elif image_hash is None:
         print(
-            f"  Rebuilding '{IMAGE_NAME}' (no build hash — upgrading to tracked builds)...",
+            f"  Rebuilding '{name}' (no build hash — upgrading to tracked builds)...",
             file=sys.stderr,
         )
     else:
         print(
-            f"  Rebuilding '{IMAGE_NAME}' (Dockerfile changed: {image_hash} → {current_hash})...",
+            f"  Rebuilding '{name}' (Dockerfile changed: {image_hash} → {current_hash})...",
             file=sys.stderr,
         )
 
     _build_image(docker_dir, current_hash)
-    print(f"  Image '{IMAGE_NAME}' ready (hash: {current_hash}).", file=sys.stderr)
+    print(f"  Image '{name}' ready (hash: {current_hash}).", file=sys.stderr)
 
 
 def _ensure_container(
