@@ -567,19 +567,20 @@ def _start_claude_session(
         "tmux", "new-session", "-d", "-s", bot.name, claude_cmd,
     ])
 
-    # Auto-confirm consent prompt in autonomous mode
+    # Auto-confirm consent prompt in autonomous mode.
+    # Claude takes several seconds to start and render the consent prompt.
     if mode == "autonomous":
-        time.sleep(3)
+        time.sleep(8)
         _docker_run_ok([
             "exec", "--user", "claude", cname,
             "tmux", "send-keys", "-t", bot.name, "Enter",
         ])
-        time.sleep(2)
+        time.sleep(3)
 
 
 def _verify_session(bot_name: str) -> None:
     """Verify the tmux session started successfully."""
-    for _ in range(5):
+    for _ in range(15):
         if _has_tmux_session(bot_name):
             return
         time.sleep(1)
