@@ -106,7 +106,7 @@ def doctor() -> None:
             all_passed = False
 
         # 5. Bot identity files
-        repo_root = config_path.parent.parent  # .forge/config.yaml -> repo root
+        repo_root = cfg_path.parent.parent  # .forge/config.yaml -> repo root
         for bot in bots:
             bot_name = bot.get("name", "unknown")
             identity_path = repo_root / "docker" / "claude-dev" / "bots" / f"{bot_name}-identity.md"
