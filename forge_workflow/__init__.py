@@ -1,3 +1,5 @@
 """Forge Workflow — portable delivery workflow engine."""
 
-__version__ = "0.1.3"
+from importlib.metadata import version
+
+__version__ = version("forge-workflow")
