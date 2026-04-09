@@ -183,11 +183,8 @@ def bot_launch(
                 repo_slug=repo_slug,
                 bots_dir=bots_dir,
             )
-            cname = f"claude-{bot.name}"
             typer.echo(f"  {bot.name} started.")
-            typer.echo(
-                f"  Attach: docker exec -it --user claude {cname} tmux attach -t {bot.name}"
-            )
+            typer.echo(f"  Attach: forge bot attach {bot.name}")
         except DockerError as e:
             typer.echo(f"Error launching {bot.name}: {e}", err=True)
             if not all_bots:
