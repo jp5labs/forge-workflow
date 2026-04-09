@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "forge-workflow"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Portable bot fleet and delivery workflow toolkit"
 readme = "README.md"
 license = {text = "MIT"}
@@ -42,6 +42,11 @@ branch = true
 [tool.coverage.report]
 show_missing = true
 precision = 1
+
+[tool.setuptools_scm]
+version_scheme = "guess-next-dev"
+local_scheme = "no-local-version"
+fallback_version = "0.0.0"
 
 [tool.ruff]
 target-version = "py312"
