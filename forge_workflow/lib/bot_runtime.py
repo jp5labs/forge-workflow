@@ -410,9 +410,10 @@ def _ensure_auth(bot_name: str) -> None:
     ])
     if not ok:
         raise DockerError(
-            f"GitHub auth required for {cname}:\n"
-            f"  1. docker exec -it --user claude {cname} gh auth login\n"
-            f"  2. docker exec -it --user claude {cname} claude /login"
+            f"GitHub auth required for {bot_name}. Run:\n"
+            f"  1. forge bot attach {bot_name}  (then run: gh auth login)\n"
+            f"  2. forge bot attach {bot_name}  (then run: claude /login)\n"
+            f"  3. Detach with Ctrl+B then D, then re-run: forge bot launch {bot_name}"
         )
     _docker_run_ok(["exec", "--user", "claude", cname, "gh", "auth", "setup-git"])
 
@@ -584,11 +585,11 @@ def _verify_session(bot_name: str) -> None:
         if _has_tmux_session(bot_name):
             return
         time.sleep(1)
-    cname = container_name(bot_name)
     raise DockerError(
         f"{bot_name} tmux session failed to start.\n"
-        f"  Debug: docker exec -it --user claude {cname} bash\n"
-        f"  Auth:  docker exec -it --user claude {cname} claude /login"
+        f"  Debug:  forge bot attach {bot_name}\n"
+        f"  Status: forge bot status\n"
+        f"  Retry:  forge bot restart {bot_name}"
     )
 
 

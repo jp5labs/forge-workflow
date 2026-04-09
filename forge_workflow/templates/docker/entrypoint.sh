@@ -76,10 +76,9 @@ trap cleanup SIGTERM SIGINT
 # --- Ready ---
 echo "$CONTAINER ready."
 echo "  First-time setup:"
-echo "    docker exec -it --user claude $CONTAINER gh auth login"
-echo "    docker exec -it --user claude $CONTAINER claude /login"
-echo "  Launch Claude:"
-echo "    bash scripts/start-claude-remote.sh${BOT_NAME:+ $BOT_NAME}"
+echo "    forge bot attach ${BOT_NAME:-dev}  (then run: gh auth login && claude /login)"
+echo "  Launch:"
+echo "    forge bot launch ${BOT_NAME:-dev}"
 
 notify_lifecycle container-start
 
