@@ -251,3 +251,63 @@ def bot_attach(
     subprocess.run(
         ["docker", "exec", "-it", "--user", "claude", cname, "tmux", "attach", "-t", name],
     )
+
+
+@app.command("setup-guide")
+def bot_setup_guide(
+    name: str = typer.Argument(help="Bot name to show setup guide for"),
+) -> None:
+    """Print the full first-time setup guide for a bot with Discord."""
+    root = _find_root()
+    bot = _get_bot(root, name)
+
+    guide = f"""
+First-Time Bot Setup Guide: {bot.name}
+{'=' * 50}
+
+1. LAUNCH THE BOT
+   forge bot launch {bot.name}
+
+2. AUTHENTICATE (first launch only)
+   If launch fails with "GitHub auth required":
+   a. Start a shell in the container:
+      docker exec -it --user claude claude-{bot.name} bash
+   b. Run:  gh auth login
+   c. Run:  claude /login
+   d. Exit the shell:  exit
+   e. Re-launch:  forge bot launch {bot.name}
+
+3. CONFIGURE DISCORD (first launch only)
+   a. Attach to the bot session:
+      forge bot attach {bot.name}
+   b. In the Claude session, run:
+      /discord:configure
+   c. Paste the Discord bot token when prompted
+   d. Exit Claude:  /exit
+   e. Re-launch so the plugin loads the token:
+      forge bot launch {bot.name}
+
+4. ENABLE DISCORD ACCESS
+   a. Attach again:
+      forge bot attach {bot.name}
+   b. Send the bot a DM in Discord — it will show a pairing code
+   c. In the Claude session, run:
+      /discord:access
+   d. Approve the pending pairing
+   e. Enable access for any group channels (chat IDs)
+   f. Disable pairing mode when done
+   g. Detach:  Ctrl+B then D
+
+5. VERIFY
+   forge bot status
+   Send a message to the bot in Discord — it should respond.
+
+Day-to-Day Commands
+{'=' * 50}
+  forge bot status               Check if bot is running
+  forge bot attach {bot.name:<15s} Attach to session
+  forge bot stop {bot.name:<17s} Graceful shutdown
+  forge bot restart {bot.name:<14s} Stop + relaunch
+  forge bot launch {bot.name} --bare   Launch without Discord
+"""
+    typer.echo(guide)
