@@ -226,3 +226,39 @@ class TestGenerate:
         generate(output_path=output, mode="autonomous", custom_hooks=custom)
         settings = json.loads(output.read_text())
         assert "Notification" in settings["hooks"]
+
+
+class TestMain:
+    """Tests for the CLI main() entrypoint."""
+
+    def test_main_creates_settings(self, tmp_path, monkeypatch):
+        import json
+
+        monkeypatch.setenv("CLAUDE_MODE", "autonomous")
+        monkeypatch.setenv("REPO_ROOT", str(tmp_path))
+        monkeypatch.chdir(tmp_path)
+
+        from forge_workflow.lib.settings_generator import main
+
+        main()
+
+        output = tmp_path / ".claude" / "settings.local.json"
+        assert output.is_file()
+        settings = json.loads(output.read_text())
+        assert "hooks" in settings
+        assert "PreToolUse" in settings["hooks"]
+
+    def test_main_supervised_mode(self, tmp_path, monkeypatch):
+        import json
+
+        monkeypatch.setenv("CLAUDE_MODE", "supervised")
+        monkeypatch.setenv("REPO_ROOT", str(tmp_path))
+        monkeypatch.chdir(tmp_path)
+
+        from forge_workflow.lib.settings_generator import main
+
+        main()
+
+        output = tmp_path / ".claude" / "settings.local.json"
+        settings = json.loads(output.read_text())
+        assert settings == {}
