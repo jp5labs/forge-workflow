@@ -222,3 +222,41 @@ def render_workflow_choreography() -> str:
         "",
     ]
     return "\n".join(lines) + "\n"
+
+
+def render_agents_gate_policy(bots: list[BotEntry]) -> str:
+    """Render the Autonomous Gate Policy section for AGENTS.md."""
+    lines = [
+        "### Autonomous Gate Policy",
+        "",
+        "Each forge skill has a gate — a point where it pauses for human approval. "
+        "In autonomous mode, some gates auto-proceed; others always halt.",
+        "",
+        "| Skill | Gate | Autonomous behavior | Halt conditions |",
+        "|-------|------|--------------------|--------------------|",
+        "| forge-discover | Routing confirmation | Auto-proceed | (none) |",
+        (
+            "| forge-assess | Assessment approval | Auto-proceed if clean "
+            "| UNCLEAR fit-check, HIGH risk, REVISE/DEFER, ADR boundary, DRIFT |"
+        ),
+        "| forge-plan | Plan approval | Mode-aware | Phase 4 execution handoff |",
+        (
+            "| forge-shape | Decomposition approval | Auto-proceed if `--from-spec` "
+            "| Interactive mode (no spec) |"
+        ),
+        "| forge-deliver | Implementation review | Skip — PR is the review | (none) |",
+        "| forge-spec | All gates | Never bypass | (always human) |",
+        "| forge-start | (no gate) | N/A | N/A |",
+        "| forge-cleanup | (no gate) | N/A | N/A |",
+        "",
+        "#### Override mechanisms",
+        "",
+        "- **`needs-human-gate` label:** Adding this label to a GitHub issue forces "
+        "supervised behavior for all skills working on that issue, regardless of "
+        "`CLAUDE_MODE`.",
+        "- **Fail-safe defaults:** API errors → halt. unset mode → halt. "
+        "Ambiguous evaluation → halt. When in doubt, the system stops and waits "
+        "for human input.",
+        "",
+    ]
+    return "\n".join(lines) + "\n"
