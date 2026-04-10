@@ -56,9 +56,16 @@ class TestMergeHooks:
         from forge_workflow.lib.settings_generator import merge_hooks
 
         existing = {}
-        forge_hooks = {"PreToolUse": [{"matcher": "Bash", "hooks": [{"type": "command", "command": "cmd1"}]}]}
+        forge_hooks = {
+            "PreToolUse": [{"matcher": "Bash", "hooks": [{"type": "command", "command": "cmd1"}]}],
+        }
         result = merge_hooks(existing, forge_hooks)
-        assert result == {"hooks": {"PreToolUse": [{"matcher": "Bash", "hooks": [{"type": "command", "command": "cmd1"}]}]}}
+        expected = {
+            "hooks": {
+                "PreToolUse": [{"matcher": "Bash", "hooks": [{"type": "command", "command": "cmd1"}]}],
+            }
+        }
+        assert result == expected
 
     def test_preserves_non_hook_settings(self):
         from forge_workflow.lib.settings_generator import merge_hooks
