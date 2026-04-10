@@ -137,3 +137,92 @@ class TestMergeHooks:
         matchers = [g.get("matcher") for g in result["hooks"]["PreToolUse"]]
         assert "Bash" in matchers
         assert "Edit|Write" in matchers
+
+
+class TestBuildCustomHooks:
+    """Tests for building hooks from hooks.custom config."""
+
+    def test_empty_custom_returns_empty(self):
+        from forge_workflow.lib.settings_generator import build_custom_hooks
+
+        result = build_custom_hooks([])
+        assert result == {}
+
+    def test_single_custom_hook(self):
+        from forge_workflow.lib.settings_generator import build_custom_hooks
+
+        custom = [
+            {"event": "Notification", "command": "bash scripts/hooks/notify.sh notification"}
+        ]
+        result = build_custom_hooks(custom)
+        assert "Notification" in result
+        assert len(result["Notification"]) == 1
+        assert result["Notification"][0]["hooks"][0]["command"] == "bash scripts/hooks/notify.sh notification"
+
+    def test_custom_hook_with_matcher(self):
+        from forge_workflow.lib.settings_generator import build_custom_hooks
+
+        custom = [
+            {"event": "PreToolUse", "matcher": "Bash", "command": "bash scripts/hooks/cancel-notify.sh"}
+        ]
+        result = build_custom_hooks(custom)
+        assert result["PreToolUse"][0]["matcher"] == "Bash"
+
+    def test_multiple_hooks_same_event_grouped(self):
+        from forge_workflow.lib.settings_generator import build_custom_hooks
+
+        custom = [
+            {"event": "Notification", "command": "cmd1"},
+            {"event": "Notification", "command": "cmd2"},
+        ]
+        result = build_custom_hooks(custom)
+        assert len(result["Notification"]) == 2
+
+
+class TestGenerate:
+    """Tests for the top-level generate function."""
+
+    def test_generate_creates_settings_file(self, tmp_path):
+        import json
+
+        from forge_workflow.lib.settings_generator import generate
+
+        output = tmp_path / ".claude" / "settings.local.json"
+        generate(output_path=output, mode="autonomous", custom_hooks=[])
+        assert output.is_file()
+        settings = json.loads(output.read_text())
+        assert "hooks" in settings
+
+    def test_generate_supervised_mode_empty(self, tmp_path):
+        import json
+
+        from forge_workflow.lib.settings_generator import generate
+
+        output = tmp_path / ".claude" / "settings.local.json"
+        generate(output_path=output, mode="supervised", custom_hooks=[])
+        settings = json.loads(output.read_text())
+        assert settings == {}
+
+    def test_generate_merges_with_existing(self, tmp_path):
+        import json
+
+        from forge_workflow.lib.settings_generator import generate
+
+        output = tmp_path / ".claude" / "settings.local.json"
+        output.parent.mkdir(parents=True)
+        output.write_text(json.dumps({"allowedTools": ["Read"]}))
+        generate(output_path=output, mode="autonomous", custom_hooks=[])
+        settings = json.loads(output.read_text())
+        assert settings["allowedTools"] == ["Read"]
+        assert "hooks" in settings
+
+    def test_generate_includes_custom_hooks(self, tmp_path):
+        import json
+
+        from forge_workflow.lib.settings_generator import generate
+
+        output = tmp_path / ".claude" / "settings.local.json"
+        custom = [{"event": "Notification", "command": "bash notify.sh"}]
+        generate(output_path=output, mode="autonomous", custom_hooks=custom)
+        settings = json.loads(output.read_text())
+        assert "Notification" in settings["hooks"]

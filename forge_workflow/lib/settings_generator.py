@@ -138,3 +138,104 @@ def merge_hooks(
                 existing_groups.append(copy.deepcopy(forge_group))
 
     return result
+
+
+def build_custom_hooks(custom_entries: list[dict]) -> dict[str, list[dict]]:
+    """Build hook groups from hooks.custom config entries.
+
+    Each entry is: {"event": "PreToolUse", "matcher": "Bash", "command": "..."}
+    matcher is optional.
+    """
+    hooks: dict[str, list[dict]] = {}
+    for entry in custom_entries:
+        event = entry.get("event", "")
+        if not event:
+            continue
+        command = entry.get("command", "")
+        if not command:
+            continue
+
+        group: dict[str, Any] = {
+            "hooks": [{"type": "command", "command": command}],
+        }
+        matcher = entry.get("matcher")
+        if matcher:
+            group["matcher"] = matcher
+
+        hooks.setdefault(event, []).append(group)
+
+    return hooks
+
+
+def generate(
+    output_path: Path | str,
+    mode: str = "autonomous",
+    custom_hooks: list[dict] | None = None,
+) -> None:
+    """Generate settings.local.json with forge hooks merged in.
+
+    Args:
+        output_path: Path to write settings.local.json
+        mode: "autonomous" (wire safety hooks) or "supervised" (empty)
+        custom_hooks: List of custom hook entries from hooks.custom config
+    """
+    import json
+    from pathlib import Path as _Path
+
+    output_path = _Path(output_path)
+
+    # Load existing settings if present
+    existing: dict = {}
+    if output_path.is_file():
+        try:
+            existing = json.loads(output_path.read_text())
+        except (json.JSONDecodeError, OSError):
+            existing = {}
+
+    if mode == "supervised":
+        settings = existing  # preserve existing, don't add hooks
+    else:
+        # Build forge hooks + custom hooks, then merge
+        forge_hooks = build_forge_hooks()
+        if custom_hooks:
+            custom = build_custom_hooks(custom_hooks)
+            # Merge custom into forge hooks first
+            for event, groups in custom.items():
+                forge_hooks.setdefault(event, []).extend(groups)
+        settings = merge_hooks(existing, forge_hooks)
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(json.dumps(settings, indent=2) + "\n")
+    print(f"Generated {output_path} (mode={mode})")
+
+
+def main() -> None:
+    """CLI entrypoint for settings generation.
+
+    Reads CLAUDE_MODE and REPO_ROOT env vars. Loads hooks.custom
+    from forge config if available.
+    """
+    import os
+    from pathlib import Path as _Path
+
+    mode = os.environ.get("CLAUDE_MODE", "autonomous")
+    repo_root = os.environ.get(
+        "REPO_ROOT",
+        str(_Path.cwd()),
+    )
+    output_path = _Path(repo_root) / ".claude" / "settings.local.json"
+
+    # Try to load custom hooks from forge config
+    custom_hooks: list[dict] = []
+    try:
+        from forge_workflow.config import get
+
+        custom_hooks = get("hooks.custom", []) or []
+    except Exception:
+        pass
+
+    generate(output_path=output_path, mode=mode, custom_hooks=custom_hooks)
+
+
+if __name__ == "__main__":
+    main()
