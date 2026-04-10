@@ -180,7 +180,7 @@ def _check_managed_docs(root: object = None) -> list[str]:
     agents_md = repo_root / "AGENTS.md"
     if agents_md.is_file():
         content = agents_md.read_text()
-        for section in ["bot-fleet", "bot-identity", "mode", "workflow"]:
+        for section in ["bot-fleet", "bot-identity", "mode", "autonomous-detail", "gate-policy", "workflow"]:
             if find_section(content, section) is None:
                 issues.append(
                     f"AGENTS.md missing forge-managed section: {section}. "

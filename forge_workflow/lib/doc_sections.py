@@ -124,6 +124,65 @@ def render_agents_mode_table(bots: list[BotEntry]) -> str:
     return "\n".join(lines) + "\n"
 
 
+def render_agents_autonomous_detail(bots: list[BotEntry]) -> str:
+    """Render the Autonomous Mode Detail section for AGENTS.md.
+
+    bots is accepted for call-signature consistency with other renderers
+    in scaffold.py but not used — this section is static content.
+    """
+    lines = [
+        "### Autonomous Mode Detail",
+        "",
+        "In autonomous mode, `--dangerously-skip-permissions` bypasses Claude Code's "
+        "built-in allow/deny permission lists entirely. **Hooks become the sole safety "
+        "layer.** The settings generator (`forge_workflow.lib.settings_generator`) wires "
+        "all safety hooks into `settings.local.json` at container startup.",
+        "",
+        "#### What hooks enforce",
+        "",
+        "**Circuit breakers** — halt the session on dangerous patterns:",
+        "",
+        "| Hook | Trigger |",
+        "|------|---------|",
+        "| `destructive_git_halt` | Destructive git commands (force push, reset --hard) |",
+        "| `dangerous_command_halt` | Dangerous shell commands (rm -rf, etc.) |",
+        "| `sequential_failure_breaker` | 5 consecutive Bash failures (configurable) |",
+        "| `secret_detection` | Secrets in user prompts |",
+        "| `secret_file_scanner` | Secrets in file writes/edits |",
+        "",
+        "**Guidance hooks** — block policy violations without halting:",
+        "",
+        "| Hook | Enforcement |",
+        "|------|------------|",
+        "| `block_commit_to_main` | Prevents direct commits to main branch |",
+        "| `compound_command_interceptor` | Validates compound shell commands |",
+        "| `shell_expansion_guard` | Blocks `${}` variable expansion in Bash |",
+        "",
+        "**Workflow hooks** — automation, not safety:",
+        "",
+        "| Hook | Purpose |",
+        "|------|---------|",
+        "| `circuit_breaker_init` | Initialize breaker state at session start |",
+        "| `post_plan_to_issue` | Post plan to GitHub issue on ExitPlanMode |",
+        "| `post_assessment_to_issue` | Post assessment to GitHub issue |",
+        "| `ruff_fix` | Auto-format Python after edits |",
+        "| `session_telemetry` | Record session metrics at end |",
+        "",
+        "#### Per-bot environment overrides",
+        "",
+        "Each bot's `.env` file supports these overrides:",
+        "",
+        "| Variable | Default | Effect |",
+        "|----------|---------|--------|",
+        "| `CLAUDE_MODE` | `autonomous` | `supervised` switches to `acceptEdits` "
+        "permission model and disables hook wiring |",
+        "| `CB_FAILURE_LIMIT` | `5` | Number of consecutive Bash failures before "
+        "the sequential failure breaker halts the session |",
+        "",
+    ]
+    return "\n".join(lines) + "\n"
+
+
 def render_workflow_choreography() -> str:
     """Render the forge delivery workflow choreography section."""
     lines = [
@@ -164,6 +223,48 @@ def render_workflow_choreography() -> str:
         "#### Branch Naming",
         "",
         "`issue-<N>-<slug>` — e.g. `issue-42-add-auth-middleware`",
+        "",
+    ]
+    return "\n".join(lines) + "\n"
+
+
+def render_agents_gate_policy(bots: list[BotEntry]) -> str:
+    """Render the Autonomous Gate Policy section for AGENTS.md.
+
+    bots is accepted for call-signature consistency with other renderers
+    in scaffold.py but not used — this section is static content.
+    """
+    lines = [
+        "### Autonomous Gate Policy",
+        "",
+        "Each forge skill has a gate — a point where it pauses for human approval. "
+        "In autonomous mode, some gates auto-proceed; others always halt.",
+        "",
+        "| Skill | Gate | Autonomous behavior | Halt conditions |",
+        "|-------|------|--------------------|--------------------|",
+        "| forge-discover | Routing confirmation | Auto-proceed | (none) |",
+        (
+            "| forge-assess | Assessment approval | Auto-proceed if clean "
+            "| UNCLEAR fit-check, HIGH risk, REVISE/DEFER, ADR boundary, DRIFT |"
+        ),
+        "| forge-plan | Plan approval | Mode-aware | Phase 4 execution handoff |",
+        (
+            "| forge-shape | Decomposition approval | Auto-proceed if `--from-spec` "
+            "| Interactive mode (no spec) |"
+        ),
+        "| forge-deliver | Implementation review | Skip — PR is the review | (none) |",
+        "| forge-spec | All gates | Never bypass | (always human) |",
+        "| forge-start | (no gate) | N/A | N/A |",
+        "| forge-cleanup | (no gate) | N/A | N/A |",
+        "",
+        "#### Override mechanisms",
+        "",
+        "- **`needs-human-gate` label:** Adding this label to a GitHub issue forces "
+        "supervised behavior for all skills working on that issue, regardless of "
+        "`CLAUDE_MODE`.",
+        "- **Fail-safe defaults:** API errors → halt. unset mode → halt. "
+        "Ambiguous evaluation → halt. When in doubt, the system stops and waits "
+        "for human input.",
         "",
     ]
     return "\n".join(lines) + "\n"

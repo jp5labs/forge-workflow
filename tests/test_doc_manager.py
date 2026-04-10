@@ -191,6 +191,28 @@ class TestRenderAgentsModeTable:
         assert "forge bot launch <name>" in result
 
 
+class TestRenderAgentsAutonomousDetail:
+
+    def test_renders_autonomous_detail(self):
+        from forge_workflow.lib.doc_sections import render_agents_autonomous_detail
+
+        result = render_agents_autonomous_detail([])
+        assert "### Autonomous Mode Detail" in result
+        assert "--dangerously-skip-permissions" in result
+        assert "CLAUDE_MODE" in result
+        assert "CB_FAILURE_LIMIT" in result
+
+    def test_describes_hook_categories(self):
+        from forge_workflow.lib.doc_sections import render_agents_autonomous_detail
+
+        result = render_agents_autonomous_detail([])
+        assert "Circuit breaker" in result or "circuit breaker" in result
+        assert "block_commit_to_main" in result
+        assert "destructive_git_halt" in result
+        assert "sequential_failure_breaker" in result
+        assert "secret_detection" in result
+
+
 class TestUpsertDocSections:
 
     def test_upserts_multiple_sections(self, tmp_path):
@@ -237,6 +259,8 @@ class TestScaffoldDocs:
         assert result["agents_md"]
         content = agents_md.read_text()
         assert "<!-- forge:bot-fleet:start -->" in content
+        assert "<!-- forge:autonomous-detail:start -->" in content
+        assert "<!-- forge:gate-policy:start -->" in content
         assert "Custom rules." in content
 
     def test_skips_missing_files(self, tmp_path):
@@ -347,3 +371,71 @@ class TestDoctorManagedDocs:
     def test_skips_when_file_missing(self, tmp_path):
         issues = _check_managed_docs(tmp_path)
         assert len(issues) == 0
+
+    def test_passes_when_agents_md_sections_present(self, tmp_path):
+        agents_md = tmp_path / "AGENTS.md"
+        agents_md.write_text(
+            "# Agents\n\n"
+            "<!-- forge:bot-fleet:start -->\nfleet\n"
+            "<!-- forge:bot-fleet:end -->\n"
+            "<!-- forge:bot-identity:start -->\nidentity\n"
+            "<!-- forge:bot-identity:end -->\n"
+            "<!-- forge:mode:start -->\nmode\n"
+            "<!-- forge:mode:end -->\n"
+            "<!-- forge:autonomous-detail:start -->\ndetail\n"
+            "<!-- forge:autonomous-detail:end -->\n"
+            "<!-- forge:gate-policy:start -->\npolicy\n"
+            "<!-- forge:gate-policy:end -->\n"
+            "<!-- forge:workflow:start -->\nworkflow\n"
+            "<!-- forge:workflow:end -->\n"
+        )
+        issues = _check_managed_docs(tmp_path)
+        assert len(issues) == 0
+
+    def test_warns_when_agents_md_missing_new_sections(self, tmp_path):
+        agents_md = tmp_path / "AGENTS.md"
+        agents_md.write_text(
+            "# Agents\n\n"
+            "<!-- forge:bot-fleet:start -->\nfleet\n"
+            "<!-- forge:bot-fleet:end -->\n"
+            "<!-- forge:bot-identity:start -->\nidentity\n"
+            "<!-- forge:bot-identity:end -->\n"
+            "<!-- forge:mode:start -->\nmode\n"
+            "<!-- forge:mode:end -->\n"
+            "<!-- forge:workflow:start -->\nworkflow\n"
+            "<!-- forge:workflow:end -->\n"
+        )
+        issues = _check_managed_docs(tmp_path)
+        assert any("autonomous-detail" in i for i in issues)
+        assert any("gate-policy" in i for i in issues)
+
+
+class TestRenderAgentsGatePolicy:
+
+    def test_renders_gate_policy_table(self):
+        from forge_workflow.lib.doc_sections import render_agents_gate_policy
+
+        result = render_agents_gate_policy([])
+        assert "### Autonomous Gate Policy" in result
+        assert "forge-discover" in result
+        assert "forge-assess" in result
+        assert "forge-plan" in result
+        assert "forge-shape" in result
+        assert "forge-deliver" in result
+        assert "forge-spec" in result
+        assert "forge-start" in result
+        assert "forge-cleanup" in result
+
+    def test_renders_override_mechanisms(self):
+        from forge_workflow.lib.doc_sections import render_agents_gate_policy
+
+        result = render_agents_gate_policy([])
+        assert "needs-human-gate" in result
+        assert "halt" in result.lower()
+
+    def test_renders_fail_safe_defaults(self):
+        from forge_workflow.lib.doc_sections import render_agents_gate_policy
+
+        result = render_agents_gate_policy([])
+        assert "API error" in result or "API errors" in result
+        assert "unset mode" in result or "unset" in result
