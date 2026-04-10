@@ -259,6 +259,8 @@ class TestScaffoldDocs:
         assert result["agents_md"]
         content = agents_md.read_text()
         assert "<!-- forge:bot-fleet:start -->" in content
+        assert "<!-- forge:autonomous-detail:start -->" in content
+        assert "<!-- forge:gate-policy:start -->" in content
         assert "Custom rules." in content
 
     def test_skips_missing_files(self, tmp_path):
@@ -369,6 +371,43 @@ class TestDoctorManagedDocs:
     def test_skips_when_file_missing(self, tmp_path):
         issues = _check_managed_docs(tmp_path)
         assert len(issues) == 0
+
+    def test_passes_when_agents_md_sections_present(self, tmp_path):
+        agents_md = tmp_path / "AGENTS.md"
+        agents_md.write_text(
+            "# Agents\n\n"
+            "<!-- forge:bot-fleet:start -->\nfleet\n"
+            "<!-- forge:bot-fleet:end -->\n"
+            "<!-- forge:bot-identity:start -->\nidentity\n"
+            "<!-- forge:bot-identity:end -->\n"
+            "<!-- forge:mode:start -->\nmode\n"
+            "<!-- forge:mode:end -->\n"
+            "<!-- forge:autonomous-detail:start -->\ndetail\n"
+            "<!-- forge:autonomous-detail:end -->\n"
+            "<!-- forge:gate-policy:start -->\npolicy\n"
+            "<!-- forge:gate-policy:end -->\n"
+            "<!-- forge:workflow:start -->\nworkflow\n"
+            "<!-- forge:workflow:end -->\n"
+        )
+        issues = _check_managed_docs(tmp_path)
+        assert len(issues) == 0
+
+    def test_warns_when_agents_md_missing_new_sections(self, tmp_path):
+        agents_md = tmp_path / "AGENTS.md"
+        agents_md.write_text(
+            "# Agents\n\n"
+            "<!-- forge:bot-fleet:start -->\nfleet\n"
+            "<!-- forge:bot-fleet:end -->\n"
+            "<!-- forge:bot-identity:start -->\nidentity\n"
+            "<!-- forge:bot-identity:end -->\n"
+            "<!-- forge:mode:start -->\nmode\n"
+            "<!-- forge:mode:end -->\n"
+            "<!-- forge:workflow:start -->\nworkflow\n"
+            "<!-- forge:workflow:end -->\n"
+        )
+        issues = _check_managed_docs(tmp_path)
+        assert any("autonomous-detail" in i for i in issues)
+        assert any("gate-policy" in i for i in issues)
 
 
 class TestRenderAgentsGatePolicy:

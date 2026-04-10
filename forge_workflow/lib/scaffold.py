@@ -101,8 +101,10 @@ def scaffold_docs(
     """
     from forge_workflow.lib.doc_manager import upsert_doc_sections
     from forge_workflow.lib.doc_sections import (
+        render_agents_autonomous_detail,
         render_agents_bot_fleet,
         render_agents_bot_identity,
+        render_agents_gate_policy,
         render_agents_mode_table,
         render_claude_bot_identity,
         render_claude_remote_sessions,
@@ -126,6 +128,8 @@ def scaffold_docs(
             "bot-fleet": render_agents_bot_fleet(bot_list),
             "bot-identity": render_agents_bot_identity(bot_list),
             "mode": render_agents_mode_table(bot_list),
+            "autonomous-detail": render_agents_autonomous_detail(bot_list),
+            "gate-policy": render_agents_gate_policy(bot_list),
             "workflow": render_workflow_choreography(),
         },
     )
