@@ -120,8 +120,10 @@ def _update_docs(root: Path) -> None:
 
         bots = list_bots(root)
         scaffold_docs(root, bots=bots)
-    except Exception:
-        pass  # Non-blocking — doc updates should not break bot operations
+    except Exception as e:
+        import warnings
+
+        warnings.warn(f"Doc update failed: {e}", stacklevel=2)
 
 
 def _scaffold_identity(

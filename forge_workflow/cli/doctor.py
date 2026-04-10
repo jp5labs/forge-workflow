@@ -167,7 +167,7 @@ def _check_managed_docs(root: object = None) -> list[str]:
     claude_md = repo_root / "CLAUDE.md"
     if claude_md.is_file():
         content = claude_md.read_text()
-        for section in ["remote-sessions", "workflow"]:
+        for section in ["remote-sessions", "bot-identity", "workflow"]:
             if find_section(content, section) is None:
                 issues.append(
                     f"CLAUDE.md missing forge-managed section: {section}. "
@@ -177,7 +177,7 @@ def _check_managed_docs(root: object = None) -> list[str]:
     agents_md = repo_root / "AGENTS.md"
     if agents_md.is_file():
         content = agents_md.read_text()
-        for section in ["bot-fleet", "workflow"]:
+        for section in ["bot-fleet", "bot-identity", "mode", "workflow"]:
             if find_section(content, section) is None:
                 issues.append(
                     f"AGENTS.md missing forge-managed section: {section}. "

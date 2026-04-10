@@ -155,6 +155,65 @@ class TestRenderAgentsBotFleet:
         assert "Architecture" in result
 
 
+class TestRenderClaudeBotIdentity:
+
+    def test_renders_identity_section(self):
+        from forge_workflow.lib.doc_sections import render_claude_bot_identity
+
+        result = render_claude_bot_identity([])
+        assert "Bot Identity" in result
+        assert "append-system-prompt-file" in result
+        assert "bots/{name}-identity.md" in result
+
+
+class TestRenderAgentsModeTable:
+
+    def test_renders_mode_table_with_bots(self):
+        from forge_workflow.lib.doc_sections import render_agents_mode_table
+
+        bots = [
+            BotEntry(
+                name="marcus",
+                role="Architecture",
+                github_account="marcus-vale",
+                email="m@x.com",
+            ),
+        ]
+        result = render_agents_mode_table(bots)
+        assert "autonomous" in result
+        assert "supervised" in result
+        assert "forge bot launch marcus" in result
+
+    def test_renders_mode_table_without_bots(self):
+        from forge_workflow.lib.doc_sections import render_agents_mode_table
+
+        result = render_agents_mode_table([])
+        assert "forge bot launch <name>" in result
+
+
+class TestUpsertDocSections:
+
+    def test_upserts_multiple_sections(self, tmp_path):
+        from forge_workflow.lib.doc_manager import upsert_doc_sections
+
+        md_file = tmp_path / "test.md"
+        md_file.write_text("# Doc\n\nContent.\n")
+        modified = upsert_doc_sections(
+            md_file,
+            {
+                "section-a": "A content\n",
+                "section-b": "B content\n",
+            },
+        )
+        assert modified
+        content = md_file.read_text()
+        assert "<!-- forge:section-a:start -->" in content
+        assert "A content" in content
+        assert "<!-- forge:section-b:start -->" in content
+        assert "B content" in content
+        assert "Content." in content
+
+
 # --- scaffold_docs tests ---
 
 
@@ -271,6 +330,8 @@ class TestDoctorManagedDocs:
             "# Project\n\n"
             "<!-- forge:remote-sessions:start -->\nsessions\n"
             "<!-- forge:remote-sessions:end -->\n"
+            "<!-- forge:bot-identity:start -->\nidentity\n"
+            "<!-- forge:bot-identity:end -->\n"
             "<!-- forge:workflow:start -->\ncontent\n"
             "<!-- forge:workflow:end -->\n"
         )

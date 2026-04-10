@@ -124,8 +124,8 @@ def scaffold_docs(
         target / "AGENTS.md",
         {
             "bot-fleet": render_agents_bot_fleet(bot_list),
-            "agents-bot-identity": render_agents_bot_identity(bot_list),
-            "agents-mode": render_agents_mode_table(bot_list),
+            "bot-identity": render_agents_bot_identity(bot_list),
+            "mode": render_agents_mode_table(bot_list),
             "workflow": render_workflow_choreography(),
         },
     )

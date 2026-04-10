@@ -111,7 +111,7 @@ def init(
         from forge_workflow.lib.bot_config import list_bots
 
         bot_list = list_bots(repo_root)
-    except (FileNotFoundError, Exception):
+    except Exception:
         bot_list = []
     doc_result = scaffold_docs(repo_root, bots=bot_list)
     if doc_result["claude_md"]:

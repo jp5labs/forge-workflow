@@ -49,8 +49,11 @@ def upsert_section(doc: str, section_name: str, content: str) -> str:
         return pattern.sub(replacement, doc, count=1)
     else:
         # Append new section
-        separator = "\n" if doc and not doc.endswith("\n\n") else ""
-        if doc and not doc.endswith("\n"):
+        if not doc or doc.endswith("\n\n"):
+            separator = ""
+        elif doc.endswith("\n"):
+            separator = "\n"
+        else:
             separator = "\n\n"
         return f"{doc}{separator}{marker_start}\n{content}{marker_end}\n"
 
