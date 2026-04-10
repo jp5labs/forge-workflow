@@ -122,9 +122,10 @@ def init(
     if sl_path:
         typer.echo(f"  Script: {sl_path}")
 
-    # Configure statuslineCommand directly in project settings.local.json.
+    # Configure statusLine directly in project settings.local.json.
     # Previous approach used `claude config set` via subprocess, which hangs
     # when there's no TTY (it prompts interactively for scope selection).
+    # The correct format is: {"statusLine": {"type": "command", "command": "bash /path/to/script.sh"}}
     sl_script = repo_root / "scripts" / "statusline-command.sh"
     if sl_script.is_file():
         import json
@@ -139,9 +140,10 @@ def init(
                 existing = json.loads(settings_path.read_text())
             except (json.JSONDecodeError, OSError):
                 existing = {}
-        existing["statuslineCommand"] = cmd_value
+        existing.pop("statuslineCommand", None)
+        existing["statusLine"] = {"type": "command", "command": cmd_value}
         settings_path.write_text(json.dumps(existing, indent=2) + "\n")
-        typer.echo(f"  Config: statuslineCommand → {cmd_value}")
+        typer.echo(f"  Config: statusLine → {cmd_value}")
 
     # Docs (managed sections in CLAUDE.md / AGENTS.md)
     from forge_workflow.lib.scaffold import scaffold_docs
