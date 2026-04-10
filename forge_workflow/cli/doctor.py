@@ -120,7 +120,18 @@ def doctor() -> None:
     else:
         _check("Docker available", True, "skipped (no bots configured)")
 
-    # 6. Version check (always force-check, not cached)
+    # 6. Managed doc sections
+    if exists and cfg_path:
+        repo_root = cfg_path.parent.parent
+        doc_issues = _check_managed_docs(repo_root)
+        if doc_issues:
+            for issue in doc_issues:
+                if not _check("Managed doc section", False, issue):
+                    all_passed = False
+        else:
+            _check("Managed doc sections", True, "present")
+
+    # 7. Version check (always force-check, not cached)
     try:
         from forge_workflow import __version__
         from forge_workflow.lib.version_check import check_for_update
@@ -139,3 +150,38 @@ def doctor() -> None:
     else:
         typer.echo("Some checks failed. Review the output above.")
         raise typer.Exit(code=1)
+
+
+def _check_managed_docs(root: object = None) -> list[str]:
+    """Check for presence of forge-managed sections in doc files.
+
+    Returns list of warning strings for missing sections.
+    """
+    from pathlib import Path
+
+    from forge_workflow.lib.doc_manager import find_section
+
+    repo_root = Path(str(root)) if root else Path.cwd()
+    issues: list[str] = []
+
+    claude_md = repo_root / "CLAUDE.md"
+    if claude_md.is_file():
+        content = claude_md.read_text()
+        for section in ["remote-sessions", "workflow"]:
+            if find_section(content, section) is None:
+                issues.append(
+                    f"CLAUDE.md missing forge-managed section: {section}. "
+                    f"Run 'forge init --rescaffold-skills' to add it."
+                )
+
+    agents_md = repo_root / "AGENTS.md"
+    if agents_md.is_file():
+        content = agents_md.read_text()
+        for section in ["bot-fleet", "workflow"]:
+            if find_section(content, section) is None:
+                issues.append(
+                    f"AGENTS.md missing forge-managed section: {section}. "
+                    f"Run 'forge init --rescaffold-skills' to add it."
+                )
+
+    return issues

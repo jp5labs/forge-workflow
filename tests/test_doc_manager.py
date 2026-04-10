@@ -256,3 +256,33 @@ class TestBotAddRemoveDocUpdates:
 
         agents = (root / "AGENTS.md").read_text()
         assert "Marcus" not in agents
+
+
+# --- doctor check tests ---
+
+from forge_workflow.cli.doctor import _check_managed_docs
+
+
+class TestDoctorManagedDocs:
+
+    def test_passes_when_sections_present(self, tmp_path):
+        claude_md = tmp_path / "CLAUDE.md"
+        claude_md.write_text(
+            "# Project\n\n"
+            "<!-- forge:remote-sessions:start -->\nsessions\n"
+            "<!-- forge:remote-sessions:end -->\n"
+            "<!-- forge:workflow:start -->\ncontent\n"
+            "<!-- forge:workflow:end -->\n"
+        )
+        issues = _check_managed_docs(tmp_path)
+        assert len(issues) == 0
+
+    def test_warns_when_claude_md_missing_sections(self, tmp_path):
+        claude_md = tmp_path / "CLAUDE.md"
+        claude_md.write_text("# Project\n")
+        issues = _check_managed_docs(tmp_path)
+        assert any("CLAUDE.md" in i for i in issues)
+
+    def test_skips_when_file_missing(self, tmp_path):
+        issues = _check_managed_docs(tmp_path)
+        assert len(issues) == 0
