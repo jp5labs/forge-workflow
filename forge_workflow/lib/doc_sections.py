@@ -125,7 +125,11 @@ def render_agents_mode_table(bots: list[BotEntry]) -> str:
 
 
 def render_agents_autonomous_detail(bots: list[BotEntry]) -> str:
-    """Render the Autonomous Mode Detail section for AGENTS.md."""
+    """Render the Autonomous Mode Detail section for AGENTS.md.
+
+    bots is accepted for call-signature consistency with other renderers
+    in scaffold.py but not used — this section is static content.
+    """
     lines = [
         "### Autonomous Mode Detail",
         "",
@@ -225,7 +229,11 @@ def render_workflow_choreography() -> str:
 
 
 def render_agents_gate_policy(bots: list[BotEntry]) -> str:
-    """Render the Autonomous Gate Policy section for AGENTS.md."""
+    """Render the Autonomous Gate Policy section for AGENTS.md.
+
+    bots is accepted for call-signature consistency with other renderers
+    in scaffold.py but not used — this section is static content.
+    """
     lines = [
         "### Autonomous Gate Policy",
         "",
