@@ -40,17 +40,7 @@ Invoke this skill when:
    - `denied` / `not allowed` / `prohibited`
    - `always` / `never` (when used as rules)
 
-5. Check platform map anti-patterns: do not build custom versions of model gateway, vector store, observability dashboards, workflow engine, agent orchestration runtime, prompt playground, secret manager, queue/cache primitives.
-
-## Current ADRs
-
-| ADR | Topic |
-|-----|-------|
-| ADR-004 | Retrieval topology and trust boundaries |
-| ADR-005 | RAG evaluation contract |
-| ADR-006 | Milestone A retrieval data contract |
-| ADR-007 | Hybrid retrieval strategy |
-| ADR-008 | Reindex trigger idempotency model |
+6. Check platform map anti-patterns: do not build custom versions of model gateway, vector store, observability dashboards, workflow engine, agent orchestration runtime, prompt playground, secret manager, queue/cache primitives.
 
 ## Output Format
 

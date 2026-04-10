@@ -5,25 +5,20 @@ model: sonnet
 user-invocable: true
 ---
 
-# /impact-analysis
+## Purpose
 
 Analyse the cascading impact of architectural changes across systems, integrations, teams, and finances. Uses four parallel agents to evaluate different impact dimensions simultaneously, then synthesises findings into a comprehensive impact report.
 
-## When to Use This Skill
+## Trigger
 
+Invoke this skill when:
 - Evaluating the impact of a proposed system migration or replacement
 - Assessing consequences of a technology change (e.g., switching databases, frameworks)
 - Understanding blast radius of an infrastructure change
 - Preparing impact assessments for architecture governance boards
 - Estimating effort and risk before committing to a change
 
-## Usage
-
-```
-/impact-analysis <change-description> [--scope system|programme|enterprise] [--depth quick|standard|deep]
-```
-
-### Parameters
+Usage: `/impact-analysis <change-description> [--scope system|programme|enterprise] [--depth quick|standard|deep]`
 
 | Parameter     | Description                                      | Required |
 |---------------|--------------------------------------------------|----------|
@@ -31,7 +26,7 @@ Analyse the cascading impact of architectural changes across systems, integratio
 | `--scope`     | Blast radius scope (default: `system`)           | No       |
 | `--depth`     | Analysis depth (default: `standard`)             | No       |
 
-## Instructions
+## Procedure
 
 ### Phase 1: Define the Change
 
@@ -47,7 +42,7 @@ Gather from the user:
 
 ### Phase 2: Parallel Impact Analysis — Agent Team
 
-Launch four agents simultaneously using the Task tool. Each agent analyses one dimension of impact independently.
+Launch four agents simultaneously using the Agent tool. Each agent analyses one dimension of impact independently.
 
 **Agent 1: Technical Impact Analyst** (`feature-dev:code-architect`)
 Task: Analyse affected systems and technical dependencies

@@ -5,25 +5,20 @@ model: sonnet
 user-invocable: true
 ---
 
-# /dependency-graph
+## Purpose
 
 Generate system dependency graphs showing upstream and downstream relationships, data flows, and critical paths. Produces Mermaid diagrams with colour-coded criticality and identifies single points of failure.
 
-## When to Use This Skill
+## Trigger
 
+Invoke this skill when:
 - Visualising system dependencies before making changes
 - Identifying single points of failure in an architecture
 - Understanding the blast radius of a potential system outage
 - Documenting integration landscapes for new team members
 - Preparing dependency analysis for architecture reviews
 
-## Usage
-
-```
-/dependency-graph <system-or-scope> [--direction upstream|downstream|both] [--depth 1|2|3] [--filter domain|team|criticality]
-```
-
-### Parameters
+Usage: `/dependency-graph <system-or-scope> [--direction upstream|downstream|both] [--depth 1|2|3] [--filter domain|team|criticality]`
 
 | Parameter     | Description                                          | Required |
 |---------------|------------------------------------------------------|----------|
@@ -32,7 +27,7 @@ Generate system dependency graphs showing upstream and downstream relationships,
 | `--depth`     | How many hops to traverse (default: `2`)             | No       |
 | `--filter`    | Filter by domain, team, or criticality level         | No       |
 
-## Instructions
+## Procedure
 
 ### Phase 1: Gather Dependency Data
 

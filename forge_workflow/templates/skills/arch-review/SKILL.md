@@ -18,9 +18,9 @@ Invoke this skill when:
 
 ## Canonical Sources
 
-Treat these as absolute authority:
-- `docs/architecture/ai_stack_platform_map.md` — native-first platform rules
-- `docs/architecture/node-topology.md` — SimSystem / OG / AWS topology
+Treat these as absolute authority (paths are repo-specific — update after scaffolding):
+- `docs/architecture/platform_map.md` — native-first platform rules
+- `docs/architecture/topology.md` — system topology and placement rules
 - `docs/architecture/stack-overview.md` — layer-by-layer overview
 
 ## Native-First Rule
@@ -43,7 +43,7 @@ Native platform capability > thin adapter > bespoke.
 2. Read relevant ADRs from `docs/architecture/adr-*.md` if the change touches ADR-governed areas.
 3. Spawn a `feature-dev:code-architect` agent to evaluate the proposed changes:
    ```
-   Agent(subagent_type="feature-dev:code-architect", prompt="Evaluate the following changes against the platform architecture. Read docs/architecture/ai_stack_platform_map.md, docs/architecture/node-topology.md, docs/architecture/stack-overview.md, and any relevant docs/architecture/adr-*.md files. Check: native-first rule compliance, topology placement rules (SimSystem vs OG vs AWS), anti-pattern list, existing ADR normative clauses. Changes: <description of changes>. Report verdict (APPROVED/CONCERNS/BLOCKED) with specific findings.")
+   Agent(subagent_type="feature-dev:code-architect", prompt="Evaluate the following changes against the platform architecture. Read the canonical architecture documents listed in this skill's Canonical Sources section, and any relevant docs/architecture/adr-*.md files. Check: native-first rule compliance, topology placement rules, anti-pattern list, existing ADR normative clauses. Changes: <description of changes>. Report verdict (APPROVED/CONCERNS/BLOCKED) with specific findings.")
    ```
 4. Review the architect agent's findings and produce a final review with clear verdict and actionable findings.
 

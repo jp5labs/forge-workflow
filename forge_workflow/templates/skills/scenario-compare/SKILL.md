@@ -5,25 +5,20 @@ model: sonnet
 user-invocable: true
 ---
 
-# /scenario-compare
+## Purpose
 
 Compare multiple architectural scenarios with detailed cost, timeline, complexity, risk, and benefit analysis. Uses three parallel agents to evaluate financial, technical, and risk dimensions simultaneously, then produces a weighted decision matrix with a clear recommendation.
 
-## When to Use This Skill
+## Trigger
 
+Invoke this skill when:
 - Choosing between 2-4 architectural approaches for a problem
 - Comparing build vs buy vs integrate options
 - Evaluating technology platform alternatives
 - Preparing options papers for architecture governance boards
 - Making vendor or product selection decisions
 
-## Usage
-
-```
-/scenario-compare <scenario-1> vs <scenario-2> [vs <scenario-3>] [--criteria cost,risk,time,complexity]
-```
-
-### Parameters
+Usage: `/scenario-compare <scenario-1> vs <scenario-2> [vs <scenario-3>] [--criteria cost,risk,time,complexity]`
 
 | Parameter    | Description                                         | Required |
 |--------------|-----------------------------------------------------|----------|
@@ -31,7 +26,7 @@ Compare multiple architectural scenarios with detailed cost, timeline, complexit
 | `--criteria` | Comma-separated evaluation criteria (default: all)  | No       |
 | `--weights`  | Custom weights for criteria (default: equal)        | No       |
 
-## Instructions
+## Procedure
 
 ### Phase 1: Define Scenarios
 
@@ -52,7 +47,7 @@ Also gather evaluation context:
 
 ### Phase 2: Parallel Scenario Analysis — Agent Team
 
-Launch three agents simultaneously using the Task tool. Each agent evaluates all scenarios across one dimension.
+Launch three agents simultaneously using the Agent tool. Each agent evaluates all scenarios across one dimension.
 
 **Agent 1: Cost and Financial Analyst** (Sonnet)
 Task: Compare financial implications of each scenario
