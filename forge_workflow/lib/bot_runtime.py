@@ -506,6 +506,30 @@ def _sync_bot_files(
             "python3", "-m", "forge_workflow.lib.settings_generator",
         ])
 
+    # Sync statusline script if available
+    statusline_script = get("hooks.statusline_script", None)
+    if not statusline_script:
+        # Convention path fallback
+        convention_path = "/workspace/scripts/statusline-command.sh"
+        _ok, _out = _docker_run_ok([
+            "exec", "--user", "claude", cname,
+            "test", "-f", convention_path,
+        ])
+        if _ok:
+            statusline_script = convention_path
+
+    if statusline_script:
+        dest = "/home/claude/.claude/statusline-command.sh"
+        _docker_run_ok([
+            "exec", "--user", "claude", cname,
+            "cp", statusline_script, dest,
+        ])
+        _docker_run_ok([
+            "exec", "--user", "claude", cname,
+            "claude", "config", "set", "statuslineCommand",
+            f"bash {dest}",
+        ])
+
     # Fix ownership
     _docker_run_ok([
         "exec", cname, "chown", "-R", "claude:claude", "/home/claude/.claude",

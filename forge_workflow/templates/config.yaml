@@ -25,6 +25,11 @@ hooks:
   # settings.local.json without overwriting other settings.
   # settings_generator: /workspace/scripts/generate-settings-local.py
 
+  # Statusline script: path to a shell script that renders the Claude Code
+  # status bar. Omit to use the convention path (scripts/statusline-command.sh).
+  # forge init scaffolds a default script at that path.
+  # statusline_script: scripts/statusline-command.sh
+
   # Custom hooks: additional hook entries merged alongside forge safety hooks.
   # Each entry needs an event name and command. Matcher is optional.
   # These let repos add project-specific hooks (notifications, custom checks)
