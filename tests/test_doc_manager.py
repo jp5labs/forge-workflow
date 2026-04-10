@@ -198,3 +198,61 @@ class TestScaffoldDocs:
         scaffold_docs(tmp_path, bots=bots)
         assert "Marcus" in claude_md.read_text()
         assert "Marcus" in agents_md.read_text()
+
+
+# --- bot add/remove doc update tests ---
+
+import yaml
+
+from forge_workflow.lib.bot_config import add_bot, remove_bot
+
+
+class TestBotAddRemoveDocUpdates:
+
+    def _setup_repo(self, tmp_path):
+        """Create a minimal forge repo with CLAUDE.md and AGENTS.md."""
+        forge_dir = tmp_path / ".forge"
+        forge_dir.mkdir()
+        config = {
+            "forge": {"version": 1},
+            "repo": {"org": "test", "name": "repo"},
+            "bots": [],
+        }
+        with open(forge_dir / "config.yaml", "w") as f:
+            yaml.dump(config, f)
+        (tmp_path / "CLAUDE.md").write_text("# Project\n")
+        (tmp_path / "AGENTS.md").write_text("# Agents\n")
+        return tmp_path
+
+    def test_bot_add_updates_docs(self, tmp_path):
+        root = self._setup_repo(tmp_path)
+        add_bot(
+            root,
+            name="marcus",
+            role="Architecture",
+            github_account="marcus-vale",
+            email="m@x.com",
+        )
+        claude = (root / "CLAUDE.md").read_text()
+        assert "Marcus" in claude
+        assert "forge bot launch marcus" in claude
+
+        agents = (root / "AGENTS.md").read_text()
+        assert "Marcus" in agents
+        assert "marcus-vale" in agents
+
+    def test_bot_remove_updates_docs(self, tmp_path):
+        root = self._setup_repo(tmp_path)
+        add_bot(
+            root,
+            name="marcus",
+            role="Architecture",
+            github_account="marcus-vale",
+            email="m@x.com",
+        )
+        remove_bot(root, "marcus")
+        claude = (root / "CLAUDE.md").read_text()
+        assert "Marcus" not in claude
+
+        agents = (root / "AGENTS.md").read_text()
+        assert "Marcus" not in agents

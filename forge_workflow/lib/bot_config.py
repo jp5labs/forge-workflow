@@ -92,6 +92,9 @@ def add_bot(
     _scaffold_identity(target_dir, name=name, role=role, github_account=github_account, email=email)
     _scaffold_env(target_dir, name=name, email=email)
 
+    # Update managed doc sections
+    _update_docs(root)
+
     return BotEntry(name=name, role=role, github_account=github_account, email=email)
 
 
@@ -105,6 +108,20 @@ def remove_bot(root: Path, name: str) -> None:
         raise ValueError(f"Bot '{name}' not found in config.")
     config["bots"] = bots
     _save_config(root, config)
+
+    # Update managed doc sections
+    _update_docs(root)
+
+
+def _update_docs(root: Path) -> None:
+    """Update managed sections in CLAUDE.md and AGENTS.md."""
+    try:
+        from forge_workflow.lib.scaffold import scaffold_docs
+
+        bots = list_bots(root)
+        scaffold_docs(root, bots=bots)
+    except Exception:
+        pass  # Non-blocking — doc updates should not break bot operations
 
 
 def _scaffold_identity(
