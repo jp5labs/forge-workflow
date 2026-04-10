@@ -51,6 +51,8 @@ fi
 # --- Generate settings.local.json (autonomous/supervised mode) ---
 if [[ -f "$WORKSPACE/scripts/generate-settings-local.py" ]]; then
     su -c "CLAUDE_MODE=${CLAUDE_MODE:-autonomous} python3 $WORKSPACE/scripts/generate-settings-local.py" claude || true
+else
+    su -c "CLAUDE_MODE=${CLAUDE_MODE:-autonomous} REPO_ROOT=$WORKSPACE python3 -m forge_workflow.lib.settings_generator" claude || true
 fi
 
 # --- Start SSH server ---
