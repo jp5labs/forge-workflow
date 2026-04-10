@@ -133,6 +133,21 @@ def scaffold_docs(
     return {"claude_md": claude_updated, "agents_md": agents_updated}
 
 
+def scaffold_statusline(target: Path) -> Path | None:
+    """Copy the statusline script template to scripts/statusline-command.sh.
+
+    Returns the path if created, None if it already exists.
+    """
+    dest = target / "scripts" / "statusline-command.sh"
+    if dest.is_file():
+        return None
+    content = _read_template("scripts/statusline-command.sh")
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_text(content)
+    dest.chmod(0o755)
+    return dest
+
+
 def _read_template(relative_path: str) -> str:
     """Read a template file from the forge_workflow.templates package."""
     parts = relative_path.split("/")

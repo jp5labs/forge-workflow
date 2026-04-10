@@ -104,6 +104,14 @@ def init(
         scaffold_docker(repo_root)
         typer.echo("  Docker: Dockerfile, entrypoint.sh, bot.env.example")
 
+    # Statusline script
+    if not rescaffold_skills:
+        from forge_workflow.lib.scaffold import scaffold_statusline
+
+        sl_path = scaffold_statusline(repo_root)
+        if sl_path:
+            typer.echo(f"  Script: {sl_path}")
+
     # Docs (managed sections in CLAUDE.md / AGENTS.md)
     from forge_workflow.lib.scaffold import scaffold_docs
 
