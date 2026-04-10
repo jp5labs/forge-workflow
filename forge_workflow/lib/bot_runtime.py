@@ -543,15 +543,17 @@ def _sync_bot_files(
             "p.chmod(0o755)",
         ])
 
-    # Write statuslineCommand directly to user-level settings.json.
+    # Write statusLine config directly to user-level settings.json.
     # Using `claude config set` hangs in containers (no TTY for scope prompt).
+    # The correct format is a nested object: {"statusLine": {"type": "command", "command": "..."}}.
     _docker_run_ok([
         "exec", "--user", "claude", cname,
         "python3", "-c",
         "import json, pathlib; "
         f"p = pathlib.Path('/home/claude/.claude/settings.json'); "
         "s = json.loads(p.read_text()) if p.is_file() else {}; "
-        f"s['statuslineCommand'] = 'bash {dest}'; "
+        "s.pop('statuslineCommand', None); "
+        f"s['statusLine'] = {{'type': 'command', 'command': 'bash {dest}'}}; "
         "p.write_text(json.dumps(s, indent=2) + '\\n')",
     ])
 
