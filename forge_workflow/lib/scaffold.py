@@ -133,15 +133,19 @@ def scaffold_docs(
     return {"claude_md": claude_updated, "agents_md": agents_updated}
 
 
-def scaffold_statusline(target: Path) -> Path | None:
+def scaffold_statusline(target: Path, *, force: bool = False) -> Path | None:
     """Copy the statusline script template to scripts/statusline-command.sh.
 
-    Returns the path if created, None if it already exists.
+    Returns the path if created/updated, None if unchanged.
+    When force=True, overwrites existing file (used during rescaffold).
     """
     dest = target / "scripts" / "statusline-command.sh"
-    if dest.is_file():
-        return None
     content = _read_template("scripts/statusline-command.sh")
+    if dest.is_file():
+        if not force:
+            return None
+        if dest.read_text() == content:
+            return None
     dest.parent.mkdir(parents=True, exist_ok=True)
     dest.write_text(content)
     dest.chmod(0o755)
