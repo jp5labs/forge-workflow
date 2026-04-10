@@ -506,12 +506,17 @@ def _sync_bot_files(
             "python3", "-m", "forge_workflow.lib.settings_generator",
         ])
 
-    # Sync statusline script if available
+    # Sync statusline script and configure Claude Code to use it.
+    # Resolution order:
+    #   1. hooks.statusline_script from .forge/config.yaml
+    #   2. /workspace/scripts/statusline-command.sh (convention path in repo)
+    #   3. Bundled template from forge_workflow package (always available)
+    dest = "/home/claude/.claude/statusline-command.sh"
     statusline_script = get("hooks.statusline_script", None)
+
     if not statusline_script:
-        # Convention path fallback
         convention_path = "/workspace/scripts/statusline-command.sh"
-        _ok, _out = _docker_run_ok([
+        _ok, _ = _docker_run_ok([
             "exec", "--user", "claude", cname,
             "test", "-f", convention_path,
         ])
@@ -519,23 +524,36 @@ def _sync_bot_files(
             statusline_script = convention_path
 
     if statusline_script:
-        dest = "/home/claude/.claude/statusline-command.sh"
+        # Copy from config or convention path
         _docker_run_ok([
             "exec", "--user", "claude", cname,
             "cp", statusline_script, dest,
         ])
-        # Write statuslineCommand directly to user-level settings.json.
-        # Previous approach used `claude config set` via docker exec, which
-        # hangs when there's no TTY (interactive scope prompt).
+    else:
+        # Fall back to bundled template from the installed forge_workflow package
         _docker_run_ok([
             "exec", "--user", "claude", cname,
             "python3", "-c",
-            "import json, pathlib; "
-            "p = pathlib.Path('/home/claude/.claude/settings.json'); "
-            "s = json.loads(p.read_text()) if p.is_file() else {}; "
-            f"s['statuslineCommand'] = 'bash {dest}'; "
-            "p.write_text(json.dumps(s, indent=2) + '\\n')",
+            "from importlib.resources import files; "
+            "import pathlib; "
+            "t = files('forge_workflow.templates').joinpath('scripts/statusline-command.sh'); "
+            f"p = pathlib.Path('{dest}'); "
+            "p.parent.mkdir(parents=True, exist_ok=True); "
+            "p.write_text(t.read_text()); "
+            "p.chmod(0o755)",
         ])
+
+    # Write statuslineCommand directly to user-level settings.json.
+    # Using `claude config set` hangs in containers (no TTY for scope prompt).
+    _docker_run_ok([
+        "exec", "--user", "claude", cname,
+        "python3", "-c",
+        "import json, pathlib; "
+        f"p = pathlib.Path('/home/claude/.claude/settings.json'); "
+        "s = json.loads(p.read_text()) if p.is_file() else {}; "
+        f"s['statuslineCommand'] = 'bash {dest}'; "
+        "p.write_text(json.dumps(s, indent=2) + '\\n')",
+    ])
 
     # Fix ownership
     _docker_run_ok([
