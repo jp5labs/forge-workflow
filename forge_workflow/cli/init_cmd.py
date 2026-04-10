@@ -85,7 +85,18 @@ def init(
     # Skills
     if rescaffold_skills:
         # Use update-skills logic to avoid overwriting customized files
-        from forge_workflow.lib.skill_sync import get_upstream_skills, sync_skill
+        from forge_workflow.lib.skill_sync import (
+            bootstrap_hashes,
+            get_upstream_skills,
+            sync_skill,
+        )
+
+        # Seed hash file from current local skills if it doesn't exist yet.
+        # Without this, repos that pre-date hash tracking classify all
+        # skills as MODIFIED and skip them — making rescaffold a no-op.
+        bootstrapped = bootstrap_hashes(repo_root)
+        if bootstrapped:
+            typer.echo(f"  Hashes: bootstrapped {bootstrapped} skill hashes")
 
         upstream = get_upstream_skills()
         updated = 0
@@ -111,33 +122,26 @@ def init(
     if sl_path:
         typer.echo(f"  Script: {sl_path}")
 
-    # Configure host Claude Code statuslineCommand (idempotent — safe to re-run)
+    # Configure statuslineCommand directly in project settings.local.json.
+    # Previous approach used `claude config set` via subprocess, which hangs
+    # when there's no TTY (it prompts interactively for scope selection).
     sl_script = repo_root / "scripts" / "statusline-command.sh"
     if sl_script.is_file():
+        import json
+
         abs_script = str(sl_script.resolve())
         cmd_value = f"bash {abs_script}"
-        try:
-            result = subprocess.run(
-                ["claude", "config", "set", "statuslineCommand", cmd_value],
-                capture_output=True,
-                text=True,
-                timeout=10,
-            )
-            if result.returncode == 0:
-                typer.echo(f"  Config: statuslineCommand → {cmd_value}")
-            else:
-                typer.echo(
-                    f"  Config: failed to set statuslineCommand — {result.stderr.strip()}",
-                    err=True,
-                )
-        except FileNotFoundError:
-            typer.echo(
-                f"  Config: claude CLI not found — manually run:\n"
-                f"         claude config set statuslineCommand '{cmd_value}'",
-                err=True,
-            )
-        except subprocess.TimeoutExpired:
-            typer.echo("  Config: claude config set timed out", err=True)
+        settings_path = repo_root / ".claude" / "settings.local.json"
+        settings_path.parent.mkdir(parents=True, exist_ok=True)
+        existing: dict = {}
+        if settings_path.is_file():
+            try:
+                existing = json.loads(settings_path.read_text())
+            except (json.JSONDecodeError, OSError):
+                existing = {}
+        existing["statuslineCommand"] = cmd_value
+        settings_path.write_text(json.dumps(existing, indent=2) + "\n")
+        typer.echo(f"  Config: statuslineCommand → {cmd_value}")
 
     # Docs (managed sections in CLAUDE.md / AGENTS.md)
     from forge_workflow.lib.scaffold import scaffold_docs

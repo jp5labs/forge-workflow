@@ -524,10 +524,17 @@ def _sync_bot_files(
             "exec", "--user", "claude", cname,
             "cp", statusline_script, dest,
         ])
+        # Write statuslineCommand directly to user-level settings.json.
+        # Previous approach used `claude config set` via docker exec, which
+        # hangs when there's no TTY (interactive scope prompt).
         _docker_run_ok([
             "exec", "--user", "claude", cname,
-            "claude", "config", "set", "statuslineCommand",
-            f"bash {dest}",
+            "python3", "-c",
+            "import json, pathlib; "
+            "p = pathlib.Path('/home/claude/.claude/settings.json'); "
+            "s = json.loads(p.read_text()) if p.is_file() else {}; "
+            f"s['statuslineCommand'] = 'bash {dest}'; "
+            "p.write_text(json.dumps(s, indent=2) + '\\n')",
         ])
 
     # Fix ownership
