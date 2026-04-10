@@ -2,7 +2,17 @@
 
 from __future__ import annotations
 
+import yaml
+
+from forge_workflow.cli.doctor import _check_managed_docs
+from forge_workflow.lib.bot_config import BotEntry, add_bot, remove_bot
 from forge_workflow.lib.doc_manager import find_section, upsert_section
+from forge_workflow.lib.doc_sections import (
+    render_agents_bot_fleet,
+    render_claude_remote_sessions,
+    render_workflow_choreography,
+)
+from forge_workflow.lib.scaffold import scaffold_docs
 
 SAMPLE_DOC = """# My Doc
 
@@ -80,12 +90,6 @@ class TestUpsertSection:
 
 # --- Section renderer tests ---
 
-from forge_workflow.lib.bot_config import BotEntry
-from forge_workflow.lib.doc_sections import (
-    render_agents_bot_fleet,
-    render_claude_remote_sessions,
-    render_workflow_choreography,
-)
 
 
 class TestRenderClaudeRemoteSessions:
@@ -153,7 +157,6 @@ class TestRenderAgentsBotFleet:
 
 # --- scaffold_docs tests ---
 
-from forge_workflow.lib.scaffold import scaffold_docs
 
 
 class TestScaffoldDocs:
@@ -202,9 +205,7 @@ class TestScaffoldDocs:
 
 # --- bot add/remove doc update tests ---
 
-import yaml
 
-from forge_workflow.lib.bot_config import add_bot, remove_bot
 
 
 class TestBotAddRemoveDocUpdates:
@@ -260,7 +261,6 @@ class TestBotAddRemoveDocUpdates:
 
 # --- doctor check tests ---
 
-from forge_workflow.cli.doctor import _check_managed_docs
 
 
 class TestDoctorManagedDocs:
