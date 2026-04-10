@@ -104,5 +104,20 @@ def init(
         scaffold_docker(repo_root)
         typer.echo("  Docker: Dockerfile, entrypoint.sh, bot.env.example")
 
+    # Docs (managed sections in CLAUDE.md / AGENTS.md)
+    from forge_workflow.lib.scaffold import scaffold_docs
+
+    try:
+        from forge_workflow.lib.bot_config import list_bots
+
+        bot_list = list_bots(repo_root)
+    except (FileNotFoundError, Exception):
+        bot_list = []
+    doc_result = scaffold_docs(repo_root, bots=bot_list)
+    if doc_result["claude_md"]:
+        typer.echo("  Docs:   CLAUDE.md managed sections updated")
+    if doc_result["agents_md"]:
+        typer.echo("  Docs:   AGENTS.md managed sections updated")
+
     typer.echo(f"\nForge initialized in {repo_root}")
     typer.echo("Next: edit .forge/config.yaml, then run 'forge bot add <name>'")

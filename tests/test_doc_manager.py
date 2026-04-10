@@ -80,13 +80,12 @@ class TestUpsertSection:
 
 # --- Section renderer tests ---
 
+from forge_workflow.lib.bot_config import BotEntry
 from forge_workflow.lib.doc_sections import (
     render_agents_bot_fleet,
     render_claude_remote_sessions,
     render_workflow_choreography,
 )
-
-from forge_workflow.lib.bot_config import BotEntry
 
 
 class TestRenderClaudeRemoteSessions:
@@ -150,3 +149,52 @@ class TestRenderAgentsBotFleet:
         assert "claude-marcus" in result
         assert "marcus-vale" in result
         assert "Architecture" in result
+
+
+# --- scaffold_docs tests ---
+
+from forge_workflow.lib.scaffold import scaffold_docs
+
+
+class TestScaffoldDocs:
+
+    def test_updates_existing_claude_md(self, tmp_path):
+        claude_md = tmp_path / "CLAUDE.md"
+        claude_md.write_text("# My Project\n\nCustom content.\n")
+        result = scaffold_docs(tmp_path, bots=[])
+        assert result["claude_md"]
+        content = claude_md.read_text()
+        assert "<!-- forge:remote-sessions:start -->" in content
+        assert "<!-- forge:workflow:start -->" in content
+        assert "Custom content." in content
+
+    def test_updates_existing_agents_md(self, tmp_path):
+        agents_md = tmp_path / "AGENTS.md"
+        agents_md.write_text("# Agents\n\nCustom rules.\n")
+        result = scaffold_docs(tmp_path, bots=[])
+        assert result["agents_md"]
+        content = agents_md.read_text()
+        assert "<!-- forge:bot-fleet:start -->" in content
+        assert "Custom rules." in content
+
+    def test_skips_missing_files(self, tmp_path):
+        result = scaffold_docs(tmp_path, bots=[])
+        assert not result["claude_md"]
+        assert not result["agents_md"]
+
+    def test_includes_bots_in_tables(self, tmp_path):
+        claude_md = tmp_path / "CLAUDE.md"
+        claude_md.write_text("# Project\n")
+        agents_md = tmp_path / "AGENTS.md"
+        agents_md.write_text("# Agents\n")
+        bots = [
+            BotEntry(
+                name="marcus",
+                role="Architecture",
+                github_account="marcus-vale",
+                email="m@x.com",
+            ),
+        ]
+        scaffold_docs(tmp_path, bots=bots)
+        assert "Marcus" in claude_md.read_text()
+        assert "Marcus" in agents_md.read_text()
