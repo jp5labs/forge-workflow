@@ -164,9 +164,7 @@ For each vertical slice approved in Step 2:
 
 For each sub-issue that depends on another sub-issue (identified in Step 2):
 
-```bash
-jp5 ops issue-relations --action set --issue <downstream> --blocked-by <upstream>
-```
+Use native GitHub issue relationships (`blocked by` / `blocking`) via the GitHub UI or `gh api` to set dependency connections between sub-issues.
 
 Also wire each sub-issue as a child of the spec issue if the repo supports sub-issues, or note the parent-child relationship in the spec issue body by editing it to list all sub-issue numbers.
 
@@ -216,7 +214,7 @@ Spec decomposition complete:
    - Add to project via GraphQL `addProjectV2ItemById`
    - Set Track and Lane fields via `updateProjectV2ItemFieldValue` using config-resolved IDs
    - If project board not enabled, skip this step silently
-6. Set dependency relationships if needed via `jp5 ops issue-relations`.
+6. Set dependency relationships if needed via native GitHub issue relationships or `gh api`.
 
 #### For refining existing issues
 1. Read the issue: `gh issue view <number> --json body,comments,labels,milestone`.
