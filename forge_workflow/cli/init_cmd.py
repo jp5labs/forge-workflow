@@ -111,6 +111,34 @@ def init(
     if sl_path:
         typer.echo(f"  Script: {sl_path}")
 
+    # Configure host Claude Code statuslineCommand (idempotent — safe to re-run)
+    sl_script = repo_root / "scripts" / "statusline-command.sh"
+    if sl_script.is_file():
+        abs_script = str(sl_script.resolve())
+        cmd_value = f"bash {abs_script}"
+        try:
+            result = subprocess.run(
+                ["claude", "config", "set", "statuslineCommand", cmd_value],
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+            if result.returncode == 0:
+                typer.echo(f"  Config: statuslineCommand → {cmd_value}")
+            else:
+                typer.echo(
+                    f"  Config: failed to set statuslineCommand — {result.stderr.strip()}",
+                    err=True,
+                )
+        except FileNotFoundError:
+            typer.echo(
+                f"  Config: claude CLI not found — manually run:\n"
+                f"         claude config set statuslineCommand '{cmd_value}'",
+                err=True,
+            )
+        except subprocess.TimeoutExpired:
+            typer.echo("  Config: claude config set timed out", err=True)
+
     # Docs (managed sections in CLAUDE.md / AGENTS.md)
     from forge_workflow.lib.scaffold import scaffold_docs
 
