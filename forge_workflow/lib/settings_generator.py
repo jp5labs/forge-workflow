@@ -89,3 +89,52 @@ def build_forge_hooks() -> dict[str, list[dict]]:
             }
         ],
     }
+
+
+def merge_hooks(
+    existing_settings: dict,
+    forge_hooks: dict[str, list[dict]],
+) -> dict:
+    """Merge forge hooks into existing settings without clobbering.
+
+    - Preserves all non-hook settings (allowedTools, permissions, etc.)
+    - For each hook event, appends forge hooks to matching matcher groups
+    - Adds new matcher groups for matchers not already present
+    - Skips hooks that are already present (idempotent)
+    """
+    import copy
+
+    result = copy.deepcopy(existing_settings)
+    existing_hooks = result.setdefault("hooks", {})
+
+    for event, forge_groups in forge_hooks.items():
+        if event not in existing_hooks:
+            existing_hooks[event] = copy.deepcopy(forge_groups)
+            continue
+
+        existing_groups = existing_hooks[event]
+
+        for forge_group in forge_groups:
+            forge_matcher = forge_group.get("matcher")
+            # Find existing group with same matcher
+            matched_group = None
+            for eg in existing_groups:
+                if eg.get("matcher") == forge_matcher:
+                    matched_group = eg
+                    break
+
+            if matched_group is not None:
+                # Append forge hooks that aren't already present
+                existing_cmds = {
+                    h.get("command") for h in matched_group.get("hooks", [])
+                }
+                for hook in forge_group.get("hooks", []):
+                    if hook.get("command") not in existing_cmds:
+                        matched_group.setdefault("hooks", []).append(
+                            copy.deepcopy(hook)
+                        )
+            else:
+                # New matcher group — add it
+                existing_groups.append(copy.deepcopy(forge_group))
+
+    return result

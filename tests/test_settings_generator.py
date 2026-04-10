@@ -47,3 +47,93 @@ class TestBuildForgeHooks:
         assert any("block_commit_to_main" in c for c in hook_cmds)
         assert any("destructive_git_halt" in c for c in hook_cmds)
         assert any("compound_command_interceptor" in c for c in hook_cmds)
+
+
+class TestMergeHooks:
+    """Tests for merging forge hooks into existing settings."""
+
+    def test_merge_into_empty_settings(self):
+        from forge_workflow.lib.settings_generator import merge_hooks
+
+        existing = {}
+        forge_hooks = {"PreToolUse": [{"matcher": "Bash", "hooks": [{"type": "command", "command": "cmd1"}]}]}
+        result = merge_hooks(existing, forge_hooks)
+        assert result == {"hooks": {"PreToolUse": [{"matcher": "Bash", "hooks": [{"type": "command", "command": "cmd1"}]}]}}
+
+    def test_preserves_non_hook_settings(self):
+        from forge_workflow.lib.settings_generator import merge_hooks
+
+        existing = {"allowedTools": ["Read", "Write"], "permissions": {"allow": ["*.py"]}}
+        forge_hooks = {"SessionEnd": [{"hooks": [{"type": "command", "command": "cmd1"}]}]}
+        result = merge_hooks(existing, forge_hooks)
+        assert result["allowedTools"] == ["Read", "Write"]
+        assert result["permissions"] == {"allow": ["*.py"]}
+        assert "SessionEnd" in result["hooks"]
+
+    def test_appends_to_matching_matcher(self):
+        from forge_workflow.lib.settings_generator import merge_hooks
+
+        existing = {
+            "hooks": {
+                "PreToolUse": [
+                    {"matcher": "Bash", "hooks": [{"type": "command", "command": "existing-cmd"}]}
+                ]
+            }
+        }
+        forge_hooks = {
+            "PreToolUse": [
+                {"matcher": "Bash", "hooks": [{"type": "command", "command": "forge-cmd"}]}
+            ]
+        }
+        result = merge_hooks(existing, forge_hooks)
+        bash_groups = [g for g in result["hooks"]["PreToolUse"] if g.get("matcher") == "Bash"]
+        assert len(bash_groups) == 1, "Should merge into same matcher group, not duplicate"
+        hook_cmds = [h["command"] for h in bash_groups[0]["hooks"]]
+        assert "existing-cmd" in hook_cmds
+        assert "forge-cmd" in hook_cmds
+
+    def test_adds_new_event_without_touching_existing(self):
+        from forge_workflow.lib.settings_generator import merge_hooks
+
+        existing = {
+            "hooks": {
+                "SessionStart": [{"hooks": [{"type": "command", "command": "existing"}]}]
+            }
+        }
+        forge_hooks = {
+            "SessionEnd": [{"hooks": [{"type": "command", "command": "forge-end"}]}]
+        }
+        result = merge_hooks(existing, forge_hooks)
+        assert "SessionStart" in result["hooks"]
+        assert "SessionEnd" in result["hooks"]
+        assert result["hooks"]["SessionStart"][0]["hooks"][0]["command"] == "existing"
+
+    def test_no_duplicate_hooks_on_repeated_merge(self):
+        from forge_workflow.lib.settings_generator import merge_hooks
+
+        existing = {}
+        forge_hooks = {"SessionEnd": [{"hooks": [{"type": "command", "command": "cmd1"}]}]}
+        result = merge_hooks(existing, forge_hooks)
+        result2 = merge_hooks(result, forge_hooks)
+        end_hooks = result2["hooks"]["SessionEnd"][0]["hooks"]
+        assert len(end_hooks) == 1, "Should not duplicate hooks on re-merge"
+
+    def test_appends_new_matcher_group_to_existing_event(self):
+        from forge_workflow.lib.settings_generator import merge_hooks
+
+        existing = {
+            "hooks": {
+                "PreToolUse": [
+                    {"matcher": "Bash", "hooks": [{"type": "command", "command": "existing"}]}
+                ]
+            }
+        }
+        forge_hooks = {
+            "PreToolUse": [
+                {"matcher": "Edit|Write", "hooks": [{"type": "command", "command": "forge-edit"}]}
+            ]
+        }
+        result = merge_hooks(existing, forge_hooks)
+        matchers = [g.get("matcher") for g in result["hooks"]["PreToolUse"]]
+        assert "Bash" in matchers
+        assert "Edit|Write" in matchers
