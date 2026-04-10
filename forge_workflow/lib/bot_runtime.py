@@ -492,13 +492,19 @@ def _sync_bot_files(
             f"{cname}:/home/claude/.claude/projects/-workspace/memory/",
         ])
 
-    # Generate settings (path is configurable via forge config)
+    # Generate settings — use custom script if configured, otherwise built-in generator
     from forge_workflow.config import get
-    settings_script = get("hooks.settings_generator", "/workspace/scripts/generate-settings-local.py")
-    _docker_run_ok([
-        "exec", "--user", "claude", cname,
-        "python3", settings_script,
-    ])
+    custom_generator = get("hooks.settings_generator")
+    if custom_generator:
+        _docker_run_ok([
+            "exec", "--user", "claude", cname,
+            "python3", custom_generator,
+        ])
+    else:
+        _docker_run_ok([
+            "exec", "--user", "claude", cname,
+            "python3", "-m", "forge_workflow.lib.settings_generator",
+        ])
 
     # Fix ownership
     _docker_run_ok([
