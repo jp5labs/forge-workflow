@@ -76,3 +76,77 @@ class TestUpsertSection:
         assert "A-updated" in result
         assert "B" in result
         assert "Middle" in result
+
+
+# --- Section renderer tests ---
+
+from forge_workflow.lib.doc_sections import (
+    render_agents_bot_fleet,
+    render_claude_remote_sessions,
+    render_workflow_choreography,
+)
+
+from forge_workflow.lib.bot_config import BotEntry
+
+
+class TestRenderClaudeRemoteSessions:
+
+    def test_renders_table_with_bots(self):
+        bots = [
+            BotEntry(
+                name="marcus",
+                role="Architecture",
+                github_account="marcus-vale",
+                email="m@x.com",
+            ),
+            BotEntry(
+                name="alex",
+                role="Implementation",
+                github_account="alexnova-dev",
+                email="a@x.com",
+            ),
+        ]
+        result = render_claude_remote_sessions(bots)
+        assert "| Marcus |" in result
+        assert "forge bot launch marcus" in result
+        assert "claude-marcus" in result
+        assert "| Generic |" in result
+
+    def test_renders_empty_table_without_bots(self):
+        result = render_claude_remote_sessions([])
+        assert "| Generic |" in result
+        assert "forge bot launch" in result
+
+
+class TestRenderWorkflowChoreography:
+
+    def test_renders_workflow_modes(self):
+        result = render_workflow_choreography()
+        assert "full" in result
+        assert "standard" in result
+        assert "quick" in result
+        assert "ship" in result
+
+    def test_renders_skill_reference_table(self):
+        result = render_workflow_choreography()
+        assert "forge-deliver" in result
+        assert "forge-plan" in result
+        assert "forge-discover" in result
+
+
+class TestRenderAgentsBotFleet:
+
+    def test_renders_fleet_table(self):
+        bots = [
+            BotEntry(
+                name="marcus",
+                role="Architecture",
+                github_account="marcus-vale",
+                email="m@x.com",
+            ),
+        ]
+        result = render_agents_bot_fleet(bots)
+        assert "| Marcus |" in result
+        assert "claude-marcus" in result
+        assert "marcus-vale" in result
+        assert "Architecture" in result
