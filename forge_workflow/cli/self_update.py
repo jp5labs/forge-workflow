@@ -29,7 +29,7 @@ def self_update(
         typer.echo("Updating to latest...")
 
     result = subprocess.run(
-        [sys.executable, "-m", "pip", "install", "--upgrade", install_ref],
+        [sys.executable, "-m", "pip", "install", "--break-system-packages", "--upgrade", install_ref],
         capture_output=True,
         text=True,
     )
