@@ -1,0 +1,13 @@
+forge:
+  version: 1
+repo:
+  org: jp5labs
+  name: forge-workflow
+bots: []
+project_board:
+  enabled: false
+notifications:
+  discord:
+    enabled: false
+hooks:
+  mode: supervised
