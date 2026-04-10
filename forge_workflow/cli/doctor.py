@@ -109,7 +109,10 @@ def doctor() -> None:
         repo_root = cfg_path.parent.parent  # .forge/config.yaml -> repo root
         for bot in bots:
             bot_name = bot.get("name", "unknown")
-            identity_path = repo_root / "docker" / "claude-dev" / "bots" / f"{bot_name}-identity.md"
+            bots_base = repo_root / "bots"
+            if not bots_base.is_dir():
+                bots_base = repo_root / "docker" / "claude-dev" / "bots"
+            identity_path = bots_base / f"{bot_name}-identity.md"
             bot_ok = identity_path.is_file()
             if not _check(
                 f"Bot identity: {bot_name}",
