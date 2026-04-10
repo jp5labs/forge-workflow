@@ -262,3 +262,38 @@ class TestMain:
         output = tmp_path / ".claude" / "settings.local.json"
         settings = json.loads(output.read_text())
         assert settings == {}
+
+    def test_supervised_strips_autonomous_hooks(self, tmp_path):
+        """Switching from autonomous to supervised should produce empty settings."""
+        import json
+
+        from forge_workflow.lib.settings_generator import generate
+
+        output = tmp_path / ".claude" / "settings.local.json"
+        # First run: autonomous writes hooks
+        generate(output_path=output, mode="autonomous", custom_hooks=[])
+        settings = json.loads(output.read_text())
+        assert "hooks" in settings
+
+        # Second run: supervised should write {} regardless
+        generate(output_path=output, mode="supervised", custom_hooks=[])
+        settings = json.loads(output.read_text())
+        assert settings == {}
+
+    def test_generate_idempotent_with_custom_hooks(self, tmp_path):
+        """Running generate twice with same custom hooks should not duplicate."""
+        import json
+
+        from forge_workflow.lib.settings_generator import generate
+
+        output = tmp_path / ".claude" / "settings.local.json"
+        custom = [{"event": "Notification", "command": "bash notify.sh"}]
+
+        generate(output_path=output, mode="autonomous", custom_hooks=custom)
+        first = json.loads(output.read_text())
+
+        generate(output_path=output, mode="autonomous", custom_hooks=custom)
+        second = json.loads(output.read_text())
+
+        # Same number of Notification groups
+        assert len(first["hooks"]["Notification"]) == len(second["hooks"]["Notification"])

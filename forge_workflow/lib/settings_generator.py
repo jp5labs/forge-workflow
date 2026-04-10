@@ -6,6 +6,9 @@ into any existing settings without clobbering.
 
 from __future__ import annotations
 
+import json
+import os
+from pathlib import Path
 from typing import Any
 
 
@@ -179,29 +182,25 @@ def generate(
         mode: "autonomous" (wire safety hooks) or "supervised" (empty)
         custom_hooks: List of custom hook entries from hooks.custom config
     """
-    import json
-    from pathlib import Path as _Path
-
-    output_path = _Path(output_path)
-
-    # Load existing settings if present
-    existing: dict = {}
-    if output_path.is_file():
-        try:
-            existing = json.loads(output_path.read_text())
-        except (json.JSONDecodeError, OSError):
-            existing = {}
+    output_path = Path(output_path)
 
     if mode == "supervised":
-        settings = existing  # preserve existing, don't add hooks
+        settings: dict = {}
     else:
+        # Load existing settings if present
+        existing: dict = {}
+        if output_path.is_file():
+            try:
+                existing = json.loads(output_path.read_text())
+            except (json.JSONDecodeError, OSError):
+                existing = {}
+
         # Build forge hooks + custom hooks, then merge
         forge_hooks = build_forge_hooks()
         if custom_hooks:
             custom = build_custom_hooks(custom_hooks)
-            # Merge custom into forge hooks first
-            for event, groups in custom.items():
-                forge_hooks.setdefault(event, []).extend(groups)
+            # Merge custom into forge hooks (using merge_hooks for dedup)
+            forge_hooks = merge_hooks({"hooks": forge_hooks}, custom)["hooks"]
         settings = merge_hooks(existing, forge_hooks)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -215,15 +214,12 @@ def main() -> None:
     Reads CLAUDE_MODE and REPO_ROOT env vars. Loads hooks.custom
     from forge config if available.
     """
-    import os
-    from pathlib import Path as _Path
-
     mode = os.environ.get("CLAUDE_MODE", "autonomous")
     repo_root = os.environ.get(
         "REPO_ROOT",
-        str(_Path.cwd()),
+        str(Path.cwd()),
     )
-    output_path = _Path(repo_root) / ".claude" / "settings.local.json"
+    output_path = Path(repo_root) / ".claude" / "settings.local.json"
 
     # Try to load custom hooks from forge config
     custom_hooks: list[dict] = []

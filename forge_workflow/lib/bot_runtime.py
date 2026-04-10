@@ -494,7 +494,7 @@ def _sync_bot_files(
 
     # Generate settings — use custom script if configured, otherwise built-in generator
     from forge_workflow.config import get
-    custom_generator = get("hooks.settings_generator")
+    custom_generator = get("hooks.settings_generator", None)
     if custom_generator:
         _docker_run_ok([
             "exec", "--user", "claude", cname,
