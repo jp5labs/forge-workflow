@@ -14,7 +14,7 @@ def detect_existing(target: Path) -> dict[str, bool]:
     config_exists = (target / ".forge" / "config.yaml").is_file()
     skills_dir = target / ".claude" / "skills"
     skills_exist = (
-        any(skills_dir.glob("forge-*/SKILL.md")) if skills_dir.is_dir() else False
+        any(skills_dir.glob("*/SKILL.md")) if skills_dir.is_dir() else False
     )
     docker_exists = (target / "docker" / "claude-dev" / "Dockerfile").is_file()
     return {
