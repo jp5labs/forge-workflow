@@ -133,7 +133,7 @@ def init(
     # Previous approach used `claude config set` via subprocess, which hangs
     # when there's no TTY (it prompts interactively for scope selection).
     # The correct format is: {"statusLine": {"type": "command", "command": "bash /path/to/script.sh"}}
-    sl_script = repo_root / "scripts" / "statusline-command.sh"
+    sl_script = repo_root / ".forge" / "scripts" / "statusline-command.sh"
     if sl_script.is_file():
         import json
 
