@@ -9,6 +9,7 @@ import typer
 
 from forge_workflow.lib.scaffold import (
     detect_existing,
+    migrate_old_assets,
     scaffold_config,
     scaffold_docker,
     scaffold_skills,
@@ -53,13 +54,6 @@ def init(
 
     existing = detect_existing(repo_root)
 
-    # Migrate assets from old locations (docker/, scripts/) to .forge/
-    from forge_workflow.lib.scaffold import migrate_old_assets
-
-    migrated = migrate_old_assets(repo_root)
-    for asset_type in migrated:
-        typer.echo(f"  Migrated: {asset_type} → .forge/")
-
     # Handle existing config
     if existing["config"] and not rescaffold_skills:
         typer.echo(
@@ -69,6 +63,11 @@ def init(
             err=True,
         )
         raise typer.Exit(code=1)
+
+    # Migrate assets from old locations (docker/, scripts/) to .forge/
+    migrated = migrate_old_assets(repo_root)
+    for asset_type in migrated:
+        typer.echo(f"  Migrated: {asset_type} → .forge/")
 
     # Detect or use provided org/repo
     if not rescaffold_skills:
@@ -117,8 +116,8 @@ def init(
         count = scaffold_skills(repo_root)
         typer.echo(f"  Skills: {count} skill templates scaffolded")
 
-    # Docker (skip when only rescaffolding skills)
-    if not skip_docker and not rescaffold_skills:
+    # Docker (skip when only rescaffolding skills, or when just migrated)
+    if not skip_docker and not rescaffold_skills and "docker" not in migrated:
         scaffold_docker(repo_root)
         typer.echo("  Docker: Dockerfile, entrypoint.sh, bot.env.example")
 

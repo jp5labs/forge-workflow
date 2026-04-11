@@ -348,7 +348,7 @@ def _find_docker_dir() -> Path:
 def _ensure_image() -> None:
     """Build or rebuild the Docker image when needed.
 
-    - No image → auto-build from docker/claude-dev/Dockerfile
+    - No image → auto-build from .forge/docker/claude-dev/Dockerfile
     - Image exists but hash mismatch → rebuild (Dockerfile changed)
     - Image exists and hash matches → no-op
     """
@@ -474,7 +474,7 @@ def _sync_bot_files(
     if secrets_env and secrets_env.is_file():
         _docker_run_ok([
             "cp", str(secrets_env),
-            f"{cname}:/workspace/scripts/hooks/.env",
+            f"{cname}:/workspace/.forge/scripts/hooks/.env",
         ])
 
     # Memory sync

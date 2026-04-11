@@ -172,27 +172,41 @@ def migrate_old_assets(target: Path) -> list[str]:
     old_docker = target / "docker" / "claude-dev"
     new_docker = target / ".forge" / "docker" / "claude-dev"
     if old_docker.is_dir() and not new_docker.is_dir():
-        new_docker.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copytree(old_docker, new_docker)
-        shutil.rmtree(old_docker)
-        # Remove docker/ parent if now empty
-        docker_parent = target / "docker"
-        if docker_parent.is_dir() and not any(docker_parent.iterdir()):
-            docker_parent.rmdir()
-        migrated.append("docker")
+        try:
+            new_docker.parent.mkdir(parents=True, exist_ok=True)
+            shutil.move(str(old_docker), str(new_docker))
+            # Remove docker/ parent if now empty
+            docker_parent = target / "docker"
+            if docker_parent.is_dir() and not any(docker_parent.iterdir()):
+                docker_parent.rmdir()
+            migrated.append("docker")
+        except OSError as exc:
+            import sys
+
+            print(
+                f"  Warning: failed to migrate docker assets: {exc}",
+                file=sys.stderr,
+            )
 
     # Statusline script: scripts/statusline-command.sh → .forge/scripts/
     old_sl = target / "scripts" / "statusline-command.sh"
     new_sl = target / ".forge" / "scripts" / "statusline-command.sh"
     if old_sl.is_file() and not new_sl.is_file():
-        new_sl.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(old_sl, new_sl)
-        old_sl.unlink()
-        # Remove scripts/ parent if now empty
-        scripts_parent = target / "scripts"
-        if scripts_parent.is_dir() and not any(scripts_parent.iterdir()):
-            scripts_parent.rmdir()
-        migrated.append("statusline")
+        try:
+            new_sl.parent.mkdir(parents=True, exist_ok=True)
+            shutil.move(str(old_sl), str(new_sl))
+            # Remove scripts/ parent if now empty
+            scripts_parent = target / "scripts"
+            if scripts_parent.is_dir() and not any(scripts_parent.iterdir()):
+                scripts_parent.rmdir()
+            migrated.append("statusline")
+        except OSError as exc:
+            import sys
+
+            print(
+                f"  Warning: failed to migrate statusline script: {exc}",
+                file=sys.stderr,
+            )
 
     return migrated
 

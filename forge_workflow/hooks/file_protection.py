@@ -106,7 +106,9 @@ ALLOWED_DIRECTORIES = [
     "src/",
     "tests/",
     "docs/",
-    ".forge/",
+    "scripts/",
+    ".forge/scripts/",
+    ".forge/docker/",
     ".claude/skills/",
     ".claude/agents/",
 ]
