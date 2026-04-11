@@ -106,7 +106,7 @@ ALLOWED_DIRECTORIES = [
     "src/",
     "tests/",
     "docs/",
-    "scripts/",
+    ".forge/",
     ".claude/skills/",
     ".claude/agents/",
 ]
