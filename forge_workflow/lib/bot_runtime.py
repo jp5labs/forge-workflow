@@ -330,13 +330,13 @@ def _build_image(docker_dir: Path, build_hash: str) -> None:
 
 
 def _find_docker_dir() -> Path:
-    """Locate docker/claude-dev/ relative to .forge/config.yaml."""
+    """Locate .forge/docker/claude-dev/ relative to .forge/config.yaml."""
     from forge_workflow import config as forge_config
 
     root = forge_config._find_repo_root()
     if root is None:
         raise DockerError("No .forge/config.yaml found — cannot locate Dockerfile.")
-    docker_dir = root / "docker" / "claude-dev"
+    docker_dir = root / ".forge" / "docker" / "claude-dev"
     if not (docker_dir / "Dockerfile").is_file():
         raise DockerError(
             f"Dockerfile not found at {docker_dir}/Dockerfile. "
@@ -348,7 +348,7 @@ def _find_docker_dir() -> Path:
 def _ensure_image() -> None:
     """Build or rebuild the Docker image when needed.
 
-    - No image → auto-build from docker/claude-dev/Dockerfile
+    - No image → auto-build from .forge/docker/claude-dev/Dockerfile
     - Image exists but hash mismatch → rebuild (Dockerfile changed)
     - Image exists and hash matches → no-op
     """
@@ -474,7 +474,7 @@ def _sync_bot_files(
     if secrets_env and secrets_env.is_file():
         _docker_run_ok([
             "cp", str(secrets_env),
-            f"{cname}:/workspace/scripts/hooks/.env",
+            f"{cname}:/workspace/.forge/scripts/hooks/.env",
         ])
 
     # Memory sync
@@ -509,13 +509,13 @@ def _sync_bot_files(
     # Sync statusline script and configure Claude Code to use it.
     # Resolution order:
     #   1. hooks.statusline_script from .forge/config.yaml
-    #   2. /workspace/scripts/statusline-command.sh (convention path in repo)
+    #   2. /workspace/.forge/scripts/statusline-command.sh (convention path in repo)
     #   3. Bundled template from forge_workflow package (always available)
     dest = "/home/claude/.claude/statusline-command.sh"
     statusline_script = get("hooks.statusline_script", None)
 
     if not statusline_script:
-        convention_path = "/workspace/scripts/statusline-command.sh"
+        convention_path = "/workspace/.forge/scripts/statusline-command.sh"
         _ok, _ = _docker_run_ok([
             "exec", "--user", "claude", cname,
             "test", "-f", convention_path,

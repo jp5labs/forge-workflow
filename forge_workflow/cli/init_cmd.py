@@ -9,6 +9,7 @@ import typer
 
 from forge_workflow.lib.scaffold import (
     detect_existing,
+    migrate_old_assets,
     scaffold_config,
     scaffold_docker,
     scaffold_skills,
@@ -63,6 +64,11 @@ def init(
         )
         raise typer.Exit(code=1)
 
+    # Migrate assets from old locations (docker/, scripts/) to .forge/
+    migrated = migrate_old_assets(repo_root)
+    for asset_type in migrated:
+        typer.echo(f"  Migrated: {asset_type} → .forge/")
+
     # Detect or use provided org/repo
     if not rescaffold_skills:
         if org and repo_name:
@@ -110,8 +116,8 @@ def init(
         count = scaffold_skills(repo_root)
         typer.echo(f"  Skills: {count} skill templates scaffolded")
 
-    # Docker (skip when only rescaffolding skills)
-    if not skip_docker and not rescaffold_skills:
+    # Docker (skip when only rescaffolding skills, or when just migrated)
+    if not skip_docker and not rescaffold_skills and "docker" not in migrated:
         scaffold_docker(repo_root)
         typer.echo("  Docker: Dockerfile, entrypoint.sh, bot.env.example")
 
@@ -126,7 +132,7 @@ def init(
     # Previous approach used `claude config set` via subprocess, which hangs
     # when there's no TTY (it prompts interactively for scope selection).
     # The correct format is: {"statusLine": {"type": "command", "command": "bash /path/to/script.sh"}}
-    sl_script = repo_root / "scripts" / "statusline-command.sh"
+    sl_script = repo_root / ".forge" / "scripts" / "statusline-command.sh"
     if sl_script.is_file():
         import json
 

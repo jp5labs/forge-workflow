@@ -111,7 +111,7 @@ def doctor() -> None:
             bot_name = bot.get("name", "unknown")
             bots_base = repo_root / "bots"
             if not bots_base.is_dir():
-                bots_base = repo_root / "docker" / "claude-dev" / "bots"
+                bots_base = repo_root / ".forge" / "docker" / "claude-dev" / "bots"
             identity_path = bots_base / f"{bot_name}-identity.md"
             bot_ok = identity_path.is_file()
             if not _check(

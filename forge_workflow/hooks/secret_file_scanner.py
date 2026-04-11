@@ -80,6 +80,7 @@ SKIP_PATTERNS = [
     r"vault-conventions\.md$",
     r"\.claude/rules/.*\.md$",  # Rule documentation
     r"\.claude/skills/.*\.md$",  # Skill documentation
+    r"\.forge/scripts/.*",  # Forge-managed scripts
     r"scripts/hooks/.*\.py$",  # Hook scripts themselves
     r"forge_workflow/hooks/.*\.py$",  # Hook modules themselves
     r"docs/plans/.*\.md$",  # Implementation plans contain code examples, not secrets

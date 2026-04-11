@@ -41,6 +41,7 @@ class TestShouldSkipFile:
             ".claude/rules/some-rule.md",
             ".claude/skills/my-skill.md",
             "scripts/hooks/my-hook.py",
+            ".forge/scripts/hooks/my-hook.py",
             "forge_workflow/hooks/my-hook.py",
             "docs/plans/my-plan.md",
             "Pattern - NFR Sample Something.md",

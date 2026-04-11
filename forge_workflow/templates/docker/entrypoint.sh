@@ -49,8 +49,8 @@ if [[ -f "$WORKSPACE/pyproject.toml" ]]; then
 fi
 
 # --- Generate settings.local.json (autonomous/supervised mode) ---
-if [[ -f "$WORKSPACE/scripts/generate-settings-local.py" ]]; then
-    su -c "CLAUDE_MODE=${CLAUDE_MODE:-autonomous} python3 $WORKSPACE/scripts/generate-settings-local.py" claude || true
+if [[ -f "$WORKSPACE/.forge/scripts/generate-settings-local.py" ]]; then
+    su -c "CLAUDE_MODE=${CLAUDE_MODE:-autonomous} python3 $WORKSPACE/.forge/scripts/generate-settings-local.py" claude || true
 else
     su -c "CLAUDE_MODE=${CLAUDE_MODE:-autonomous} REPO_ROOT=$WORKSPACE python3 -m forge_workflow.lib.settings_generator" claude || true
 fi
@@ -62,7 +62,7 @@ fi
 
 notify_lifecycle() {
     local event="$1"
-    local script="$WORKSPACE/scripts/hooks/notify.sh"
+    local script="$WORKSPACE/.forge/scripts/hooks/notify.sh"
     if [[ -f "$script" ]]; then
         bash "$script" "$event" &
     fi

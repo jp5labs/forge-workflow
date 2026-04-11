@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import shutil
 from importlib.resources import files as pkg_files
 from pathlib import Path
 
@@ -16,7 +17,7 @@ def detect_existing(target: Path) -> dict[str, bool]:
     skills_exist = (
         any(skills_dir.glob("*/SKILL.md")) if skills_dir.is_dir() else False
     )
-    docker_exists = (target / "docker" / "claude-dev" / "Dockerfile").is_file()
+    docker_exists = (target / ".forge" / "docker" / "claude-dev" / "Dockerfile").is_file()
     return {
         "config": config_exists,
         "skills": skills_exist,
@@ -76,8 +77,8 @@ def scaffold_skills(target: Path) -> int:
 
 
 def scaffold_docker(target: Path) -> None:
-    """Copy Docker template files into target/docker/claude-dev/."""
-    docker_dir = target / "docker" / "claude-dev"
+    """Copy Docker template files into target/.forge/docker/claude-dev/."""
+    docker_dir = target / ".forge" / "docker" / "claude-dev"
     docker_dir.mkdir(parents=True, exist_ok=True)
     bots_dir = docker_dir / "bots"
     bots_dir.mkdir(parents=True, exist_ok=True)
@@ -138,12 +139,12 @@ def scaffold_docs(
 
 
 def scaffold_statusline(target: Path, *, force: bool = False) -> Path | None:
-    """Copy the statusline script template to scripts/statusline-command.sh.
+    """Copy the statusline script template to .forge/scripts/statusline-command.sh.
 
     Returns the path if created/updated, None if unchanged.
     When force=True, overwrites existing file (used during rescaffold).
     """
-    dest = target / "scripts" / "statusline-command.sh"
+    dest = target / ".forge" / "scripts" / "statusline-command.sh"
     content = _read_template("scripts/statusline-command.sh")
     if dest.is_file():
         if not force:
@@ -154,6 +155,60 @@ def scaffold_statusline(target: Path, *, force: bool = False) -> Path | None:
     dest.write_text(content)
     dest.chmod(0o755)
     return dest
+
+
+def migrate_old_assets(target: Path) -> list[str]:
+    """Migrate forge-managed assets from old locations to .forge/.
+
+    Moves known forge files (Docker assets, statusline script) from their
+    old repo-root locations into .forge/. Cleans up empty directories after
+    migration. Preserves user-added files.
+
+    Returns list of asset types that were migrated.
+    """
+    migrated: list[str] = []
+
+    # Docker assets: docker/claude-dev/ → .forge/docker/claude-dev/
+    old_docker = target / "docker" / "claude-dev"
+    new_docker = target / ".forge" / "docker" / "claude-dev"
+    if old_docker.is_dir() and not new_docker.is_dir():
+        try:
+            new_docker.parent.mkdir(parents=True, exist_ok=True)
+            shutil.move(str(old_docker), str(new_docker))
+            # Remove docker/ parent if now empty
+            docker_parent = target / "docker"
+            if docker_parent.is_dir() and not any(docker_parent.iterdir()):
+                docker_parent.rmdir()
+            migrated.append("docker")
+        except OSError as exc:
+            import sys
+
+            print(
+                f"  Warning: failed to migrate docker assets: {exc}",
+                file=sys.stderr,
+            )
+
+    # Statusline script: scripts/statusline-command.sh → .forge/scripts/
+    old_sl = target / "scripts" / "statusline-command.sh"
+    new_sl = target / ".forge" / "scripts" / "statusline-command.sh"
+    if old_sl.is_file() and not new_sl.is_file():
+        try:
+            new_sl.parent.mkdir(parents=True, exist_ok=True)
+            shutil.move(str(old_sl), str(new_sl))
+            # Remove scripts/ parent if now empty
+            scripts_parent = target / "scripts"
+            if scripts_parent.is_dir() and not any(scripts_parent.iterdir()):
+                scripts_parent.rmdir()
+            migrated.append("statusline")
+        except OSError as exc:
+            import sys
+
+            print(
+                f"  Warning: failed to migrate statusline script: {exc}",
+                file=sys.stderr,
+            )
+
+    return migrated
 
 
 def _read_template(relative_path: str) -> str:

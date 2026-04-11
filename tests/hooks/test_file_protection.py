@@ -153,6 +153,8 @@ class TestIsProtectedExceptions:
     @pytest.mark.parametrize("filepath", [
         "tests/test_secret_handler.py",
         "docs/credential-rotation.md",
+        ".forge/scripts/token-refresh.py",
+        ".forge/docker/claude-dev/Dockerfile",
         "scripts/token-refresh.py",
         "forge_workflow/hooks/secret_detection.py",
         ".claude/skills/token-skill.md",
