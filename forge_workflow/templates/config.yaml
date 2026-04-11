@@ -23,12 +23,12 @@ hooks:
   # forge-workflow's built-in generator (python -m forge_workflow.lib.settings_generator).
   # The built-in generator merges forge safety hooks into any existing
   # settings.local.json without overwriting other settings.
-  # settings_generator: /workspace/scripts/generate-settings-local.py
+  # settings_generator: /workspace/.forge/scripts/generate-settings-local.py
 
   # Statusline script: path to a shell script that renders the Claude Code
-  # status bar. Omit to use the convention path (scripts/statusline-command.sh).
+  # status bar. Omit to use the convention path (.forge/scripts/statusline-command.sh).
   # forge init scaffolds a default script at that path.
-  # statusline_script: scripts/statusline-command.sh
+  # statusline_script: .forge/scripts/statusline-command.sh
 
   # Custom hooks: additional hook entries merged alongside forge safety hooks.
   # Each entry needs an event name and command. Matcher is optional.
@@ -36,9 +36,9 @@ hooks:
   # without forking the settings generator.
   # custom:
   #   - event: Notification
-  #     command: "bash scripts/hooks/notify.sh notification"
+  #     command: "bash .forge/scripts/hooks/notify.sh notification"
   #   - event: PreToolUse
   #     matcher: Bash
-  #     command: "bash scripts/hooks/cancel-notify.sh"
+  #     command: "bash .forge/scripts/hooks/cancel-notify.sh"
   #   - event: SessionStart
-  #     command: "bash scripts/hooks/notify.sh session-start"
+  #     command: "bash .forge/scripts/hooks/notify.sh session-start"
