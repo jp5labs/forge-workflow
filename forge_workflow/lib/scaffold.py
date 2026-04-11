@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import shutil
 from importlib.resources import files as pkg_files
 from pathlib import Path
 
@@ -154,6 +155,46 @@ def scaffold_statusline(target: Path, *, force: bool = False) -> Path | None:
     dest.write_text(content)
     dest.chmod(0o755)
     return dest
+
+
+def migrate_old_assets(target: Path) -> list[str]:
+    """Migrate forge-managed assets from old locations to .forge/.
+
+    Moves known forge files (Docker assets, statusline script) from their
+    old repo-root locations into .forge/. Cleans up empty directories after
+    migration. Preserves user-added files.
+
+    Returns list of asset types that were migrated.
+    """
+    migrated: list[str] = []
+
+    # Docker assets: docker/claude-dev/ → .forge/docker/claude-dev/
+    old_docker = target / "docker" / "claude-dev"
+    new_docker = target / ".forge" / "docker" / "claude-dev"
+    if old_docker.is_dir() and not new_docker.is_dir():
+        new_docker.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copytree(old_docker, new_docker)
+        shutil.rmtree(old_docker)
+        # Remove docker/ parent if now empty
+        docker_parent = target / "docker"
+        if docker_parent.is_dir() and not any(docker_parent.iterdir()):
+            docker_parent.rmdir()
+        migrated.append("docker")
+
+    # Statusline script: scripts/statusline-command.sh → .forge/scripts/
+    old_sl = target / "scripts" / "statusline-command.sh"
+    new_sl = target / ".forge" / "scripts" / "statusline-command.sh"
+    if old_sl.is_file() and not new_sl.is_file():
+        new_sl.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(old_sl, new_sl)
+        old_sl.unlink()
+        # Remove scripts/ parent if now empty
+        scripts_parent = target / "scripts"
+        if scripts_parent.is_dir() and not any(scripts_parent.iterdir()):
+            scripts_parent.rmdir()
+        migrated.append("statusline")
+
+    return migrated
 
 
 def _read_template(relative_path: str) -> str:

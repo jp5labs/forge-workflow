@@ -53,6 +53,13 @@ def init(
 
     existing = detect_existing(repo_root)
 
+    # Migrate assets from old locations (docker/, scripts/) to .forge/
+    from forge_workflow.lib.scaffold import migrate_old_assets
+
+    migrated = migrate_old_assets(repo_root)
+    for asset_type in migrated:
+        typer.echo(f"  Migrated: {asset_type} → .forge/")
+
     # Handle existing config
     if existing["config"] and not rescaffold_skills:
         typer.echo(

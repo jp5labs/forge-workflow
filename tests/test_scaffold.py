@@ -109,3 +109,70 @@ class TestScaffoldStatusline:
 
         scaffold_statusline(tmp_path, force=True)
         assert not (tmp_path / "scripts" / "statusline-command.sh").exists()
+
+
+class TestMigrateOldAssets:
+    """Tests for migrate_old_assets() moving files from old to new locations."""
+
+    def test_migrates_docker_files(self, tmp_path: Path) -> None:
+        from forge_workflow.lib.scaffold import migrate_old_assets
+
+        old_docker = tmp_path / "docker" / "claude-dev"
+        old_docker.mkdir(parents=True)
+        (old_docker / "Dockerfile").write_text("FROM ubuntu")
+        (old_docker / "entrypoint.sh").write_text("#!/bin/bash")
+        bots_dir = old_docker / "bots"
+        bots_dir.mkdir()
+        (bots_dir / "bot.env.example").write_text("KEY=val")
+
+        result = migrate_old_assets(tmp_path)
+
+        new_docker = tmp_path / ".forge" / "docker" / "claude-dev"
+        assert (new_docker / "Dockerfile").read_text() == "FROM ubuntu"
+        assert (new_docker / "entrypoint.sh").read_text() == "#!/bin/bash"
+        assert (new_docker / "bots" / "bot.env.example").read_text() == "KEY=val"
+        assert not (tmp_path / "docker").exists()
+        assert "docker" in result
+
+    def test_migrates_statusline_script(self, tmp_path: Path) -> None:
+        from forge_workflow.lib.scaffold import migrate_old_assets
+
+        old_sl = tmp_path / "scripts" / "statusline-command.sh"
+        old_sl.parent.mkdir(parents=True)
+        old_sl.write_text("#!/bin/bash\necho hi")
+
+        result = migrate_old_assets(tmp_path)
+
+        new_sl = tmp_path / ".forge" / "scripts" / "statusline-command.sh"
+        assert new_sl.read_text() == "#!/bin/bash\necho hi"
+        assert not (tmp_path / "scripts" / "statusline-command.sh").exists()
+        assert "statusline" in result
+
+    def test_preserves_user_files_in_scripts(self, tmp_path: Path) -> None:
+        from forge_workflow.lib.scaffold import migrate_old_assets
+
+        scripts = tmp_path / "scripts"
+        scripts.mkdir(parents=True)
+        (scripts / "statusline-command.sh").write_text("#!/bin/bash")
+        (scripts / "my-custom-script.sh").write_text("custom")
+
+        migrate_old_assets(tmp_path)
+
+        assert (scripts / "my-custom-script.sh").read_text() == "custom"
+        assert not (scripts / "statusline-command.sh").exists()
+
+    def test_no_old_assets_returns_empty(self, tmp_path: Path) -> None:
+        from forge_workflow.lib.scaffold import migrate_old_assets
+
+        result = migrate_old_assets(tmp_path)
+        assert result == []
+
+    def test_already_migrated_is_noop(self, tmp_path: Path) -> None:
+        from forge_workflow.lib.scaffold import migrate_old_assets
+
+        new_docker = tmp_path / ".forge" / "docker" / "claude-dev"
+        new_docker.mkdir(parents=True)
+        (new_docker / "Dockerfile").write_text("FROM ubuntu")
+
+        result = migrate_old_assets(tmp_path)
+        assert "docker" not in result
