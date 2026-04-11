@@ -59,7 +59,7 @@ class TestDetectExisting:
         assert result["config"] is True
 
     def test_docker_detection(self, tmp_path: Path) -> None:
-        dockerfile = tmp_path / "docker" / "claude-dev" / "Dockerfile"
+        dockerfile = tmp_path / ".forge" / "docker" / "claude-dev" / "Dockerfile"
         dockerfile.parent.mkdir(parents=True)
         dockerfile.write_text("FROM ubuntu")
         result = detect_existing(tmp_path)
