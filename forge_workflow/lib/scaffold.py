@@ -76,8 +76,8 @@ def scaffold_skills(target: Path) -> int:
 
 
 def scaffold_docker(target: Path) -> None:
-    """Copy Docker template files into target/docker/claude-dev/."""
-    docker_dir = target / "docker" / "claude-dev"
+    """Copy Docker template files into target/.forge/docker/claude-dev/."""
+    docker_dir = target / ".forge" / "docker" / "claude-dev"
     docker_dir.mkdir(parents=True, exist_ok=True)
     bots_dir = docker_dir / "bots"
     bots_dir.mkdir(parents=True, exist_ok=True)
@@ -138,12 +138,12 @@ def scaffold_docs(
 
 
 def scaffold_statusline(target: Path, *, force: bool = False) -> Path | None:
-    """Copy the statusline script template to scripts/statusline-command.sh.
+    """Copy the statusline script template to .forge/scripts/statusline-command.sh.
 
     Returns the path if created/updated, None if unchanged.
     When force=True, overwrites existing file (used during rescaffold).
     """
-    dest = target / "scripts" / "statusline-command.sh"
+    dest = target / ".forge" / "scripts" / "statusline-command.sh"
     content = _read_template("scripts/statusline-command.sh")
     if dest.is_file():
         if not force:

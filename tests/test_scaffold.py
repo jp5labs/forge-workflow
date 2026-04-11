@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from forge_workflow.lib.scaffold import detect_existing
+from forge_workflow.lib.scaffold import (
+    detect_existing,
+)
 
 
 class TestDetectExisting:
@@ -66,3 +68,44 @@ class TestDetectExisting:
     def test_nothing_exists(self, tmp_path: Path) -> None:
         result = detect_existing(tmp_path)
         assert result == {"config": False, "skills": False, "docker": False}
+
+
+class TestScaffoldDocker:
+    """Tests for scaffold_docker() writing to .forge/docker/."""
+
+    def test_scaffold_docker_writes_to_forge_dir(self, tmp_path: Path) -> None:
+        from forge_workflow.lib.scaffold import scaffold_docker
+
+        scaffold_docker(tmp_path)
+        assert (tmp_path / ".forge" / "docker" / "claude-dev" / "Dockerfile").is_file()
+        assert (
+            tmp_path / ".forge" / "docker" / "claude-dev" / "entrypoint.sh"
+        ).is_file()
+        assert (
+            tmp_path / ".forge" / "docker" / "claude-dev" / "bots" / "bot.env.example"
+        ).is_file()
+
+    def test_scaffold_docker_does_not_write_to_old_path(self, tmp_path: Path) -> None:
+        from forge_workflow.lib.scaffold import scaffold_docker
+
+        scaffold_docker(tmp_path)
+        assert not (tmp_path / "docker").exists()
+
+
+class TestScaffoldStatusline:
+    """Tests for scaffold_statusline() writing to .forge/scripts/."""
+
+    def test_scaffold_statusline_writes_to_forge_dir(self, tmp_path: Path) -> None:
+        from forge_workflow.lib.scaffold import scaffold_statusline
+
+        result = scaffold_statusline(tmp_path, force=True)
+        assert result == tmp_path / ".forge" / "scripts" / "statusline-command.sh"
+        assert result.is_file()
+
+    def test_scaffold_statusline_does_not_write_to_old_path(
+        self, tmp_path: Path
+    ) -> None:
+        from forge_workflow.lib.scaffold import scaffold_statusline
+
+        scaffold_statusline(tmp_path, force=True)
+        assert not (tmp_path / "scripts" / "statusline-command.sh").exists()
