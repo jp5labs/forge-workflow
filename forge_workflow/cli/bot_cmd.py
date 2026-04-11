@@ -166,7 +166,7 @@ def bot_launch(
     # Determine bots directory (where identity/env files live)
     bots_dir = root / "bots"
     if not bots_dir.is_dir():
-        bots_dir = root / "docker" / "claude-dev" / "bots"
+        bots_dir = root / ".forge" / "docker" / "claude-dev" / "bots"
 
     for bot in bots:
         bot_mode = (
