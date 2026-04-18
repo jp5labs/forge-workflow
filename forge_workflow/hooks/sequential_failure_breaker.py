@@ -19,6 +19,7 @@ import sys
 from datetime import datetime, timezone
 
 from forge_workflow.hooks._repo_root import REPO_ROOT
+
 STATE_DIR = os.path.join(REPO_ROOT, "tmp", "circuit-breaker-state")
 HALT_FILE = os.path.join(REPO_ROOT, "tmp", "circuit-breaker-halt.json")
 NOTIFY_SCRIPT = os.path.normpath(os.path.join(

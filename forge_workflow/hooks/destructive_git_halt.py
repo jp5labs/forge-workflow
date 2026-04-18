@@ -20,6 +20,7 @@ import sys
 from datetime import datetime, timezone
 
 from forge_workflow.hooks._repo_root import REPO_ROOT
+
 HALT_FILE = os.path.join(REPO_ROOT, "tmp", "circuit-breaker-halt.json")
 
 DESTRUCTIVE_PATTERNS = [
