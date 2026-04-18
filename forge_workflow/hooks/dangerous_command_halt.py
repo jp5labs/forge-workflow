@@ -19,10 +19,7 @@ import subprocess
 import sys
 from datetime import datetime, timezone
 
-REPO_ROOT = os.environ.get(
-    "REPO_ROOT",
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-)
+from forge_workflow.hooks._repo_root import REPO_ROOT
 HALT_FILE = os.path.join(REPO_ROOT, "tmp", "circuit-breaker-halt.json")
 
 DANGEROUS_PATTERNS = [

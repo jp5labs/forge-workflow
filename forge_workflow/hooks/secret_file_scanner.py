@@ -87,7 +87,7 @@ SKIP_PATTERNS = [
     r"Pattern - NFR Sample.*\.md$",  # NFR samples reference AWS Secrets Manager, not actual secrets
 ]
 
-REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from forge_workflow.hooks._repo_root import REPO_ROOT
 CB_STATE_DIR = os.path.join(REPO_ROOT, "tmp", "circuit-breaker-state")
 CB_HALT_FILE = os.path.join(REPO_ROOT, "tmp", "circuit-breaker-halt.json")
 SECRET_ESCALATION_THRESHOLD = 3
