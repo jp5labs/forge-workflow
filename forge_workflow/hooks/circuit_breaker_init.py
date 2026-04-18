@@ -14,10 +14,8 @@ import os
 import shutil
 import sys
 
-REPO_ROOT = os.environ.get(
-    "REPO_ROOT",
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-)
+from forge_workflow.hooks._repo_root import REPO_ROOT
+
 STATE_DIR = os.path.join(REPO_ROOT, "tmp", "circuit-breaker-state")
 HALT_FILE = os.path.join(REPO_ROOT, "tmp", "circuit-breaker-halt.json")
 
