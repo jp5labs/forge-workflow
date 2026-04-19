@@ -217,17 +217,18 @@ def _check_pin_drift(root: object = None) -> tuple[bool, str] | None:
 
     content = pyproject.read_text()
     pattern = re.compile(
-        r'forge-workflow\s*@\s*git\+' + re.escape(REPO_URL) + r'@v?([\w.]+)'
+        r'forge-workflow\s*@\s*git\+' + re.escape(REPO_URL) + r'@([^\s"\'#]+)'
     )
     match = pattern.search(content)
     if not match:
         return None
 
-    pinned = match.group(1)
+    pinned_ref = match.group(1)
+    pinned = pinned_ref[1:] if pinned_ref.startswith("v") else pinned_ref
     if pinned == __version__:
-        return True, f"v{pinned} (matches installed)"
+        return True, f"{pinned_ref} (matches installed)"
 
     return False, (
-        f"pinned v{pinned}, installed v{__version__} "
+        f"pinned {pinned_ref}, installed v{__version__} "
         f"— run 'forge pin' to update"
     )

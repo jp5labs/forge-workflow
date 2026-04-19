@@ -10,10 +10,10 @@ from forge_workflow import __version__
 from forge_workflow import config as forge_config
 from forge_workflow.lib.version_check import REPO_URL
 
-# Pattern matches: forge-workflow @ git+<url>@<tag>
-# Captures the tag portion for replacement.
+# Captures the forge-workflow @ git+<url> prefix and optionally matches an
+# existing tag suffix so replacement can append the updated tag.
 _PIN_PATTERN = re.compile(
-    r'(forge-workflow\s*@\s*git\+' + re.escape(REPO_URL) + r')(?:@[\w.]+)?'
+    r'(forge-workflow\s*@\s*git\+' + re.escape(REPO_URL) + r')(?:@[^\s"\'#]+)?'
 )
 
 
@@ -24,7 +24,7 @@ def _find_pyproject(root: Path) -> Path | None:
 
 
 def pin(
-    path: Path = typer.Option(
+    path: Path | None = typer.Option(
         None,
         "--path",
         "-p",
