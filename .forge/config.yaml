@@ -1,0 +1,21 @@
+forge:
+  version: 1
+repo:
+  org: jp5labs
+  name: forge-workflow
+bots:
+- name: dev
+  role: Lead Developer
+  github_account: alexnova-dev
+  email: alex@jp5labs.com
+- name: dev2
+  role: Developer
+  github_account: marcus-vale
+  email: marcus@jp5labs.com
+project_board:
+  enabled: false
+notifications:
+  discord:
+    enabled: false
+hooks:
+  mode: supervised

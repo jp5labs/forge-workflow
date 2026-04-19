@@ -330,13 +330,13 @@ def _build_image(docker_dir: Path, build_hash: str) -> None:
 
 
 def _find_docker_dir() -> Path:
-    """Locate docker/claude-dev/ relative to .forge/config.yaml."""
+    """Locate .forge/docker/claude-dev/ relative to .forge/config.yaml."""
     from forge_workflow import config as forge_config
 
     root = forge_config._find_repo_root()
     if root is None:
         raise DockerError("No .forge/config.yaml found — cannot locate Dockerfile.")
-    docker_dir = root / "docker" / "claude-dev"
+    docker_dir = root / ".forge" / "docker" / "claude-dev"
     if not (docker_dir / "Dockerfile").is_file():
         raise DockerError(
             f"Dockerfile not found at {docker_dir}/Dockerfile. "
@@ -348,7 +348,7 @@ def _find_docker_dir() -> Path:
 def _ensure_image() -> None:
     """Build or rebuild the Docker image when needed.
 
-    - No image → auto-build from docker/claude-dev/Dockerfile
+    - No image → auto-build from .forge/docker/claude-dev/Dockerfile
     - Image exists but hash mismatch → rebuild (Dockerfile changed)
     - Image exists and hash matches → no-op
     """
@@ -474,7 +474,7 @@ def _sync_bot_files(
     if secrets_env and secrets_env.is_file():
         _docker_run_ok([
             "cp", str(secrets_env),
-            f"{cname}:/workspace/scripts/hooks/.env",
+            f"{cname}:/workspace/.forge/scripts/hooks/.env",
         ])
 
     # Memory sync
@@ -492,12 +492,69 @@ def _sync_bot_files(
             f"{cname}:/home/claude/.claude/projects/-workspace/memory/",
         ])
 
-    # Generate settings (path is configurable via forge config)
+    # Generate settings — use custom script if configured, otherwise built-in generator
     from forge_workflow.config import get
-    settings_script = get("hooks.settings_generator", "/workspace/scripts/generate-settings-local.py")
+    custom_generator = get("hooks.settings_generator", None)
+    if custom_generator:
+        _docker_run_ok([
+            "exec", "--user", "claude", cname,
+            "python3", custom_generator,
+        ])
+    else:
+        _docker_run_ok([
+            "exec", "--user", "claude", cname,
+            "python3", "-m", "forge_workflow.lib.settings_generator",
+        ])
+
+    # Sync statusline script and configure Claude Code to use it.
+    # Resolution order:
+    #   1. hooks.statusline_script from .forge/config.yaml
+    #   2. /workspace/.forge/scripts/statusline-command.sh (convention path in repo)
+    #   3. Bundled template from forge_workflow package (always available)
+    dest = "/home/claude/.claude/statusline-command.sh"
+    statusline_script = get("hooks.statusline_script", None)
+
+    if not statusline_script:
+        convention_path = "/workspace/.forge/scripts/statusline-command.sh"
+        _ok, _ = _docker_run_ok([
+            "exec", "--user", "claude", cname,
+            "test", "-f", convention_path,
+        ])
+        if _ok:
+            statusline_script = convention_path
+
+    if statusline_script:
+        # Copy from config or convention path
+        _docker_run_ok([
+            "exec", "--user", "claude", cname,
+            "cp", statusline_script, dest,
+        ])
+    else:
+        # Fall back to bundled template from the installed forge_workflow package
+        _docker_run_ok([
+            "exec", "--user", "claude", cname,
+            "python3", "-c",
+            "from importlib.resources import files; "
+            "import pathlib; "
+            "t = files('forge_workflow.templates').joinpath('scripts/statusline-command.sh'); "
+            f"p = pathlib.Path('{dest}'); "
+            "p.parent.mkdir(parents=True, exist_ok=True); "
+            "p.write_text(t.read_text()); "
+            "p.chmod(0o755)",
+        ])
+
+    # Write statusLine config directly to user-level settings.json.
+    # Using `claude config set` hangs in containers (no TTY for scope prompt).
+    # The correct format is a nested object: {"statusLine": {"type": "command", "command": "..."}}.
     _docker_run_ok([
         "exec", "--user", "claude", cname,
-        "python3", settings_script,
+        "python3", "-c",
+        "import json, pathlib; "
+        f"p = pathlib.Path('/home/claude/.claude/settings.json'); "
+        "s = json.loads(p.read_text()) if p.is_file() else {}; "
+        "s.pop('statuslineCommand', None); "
+        f"s['statusLine'] = {{'type': 'command', 'command': 'bash {dest}'}}; "
+        "p.write_text(json.dumps(s, indent=2) + '\\n')",
     ])
 
     # Fix ownership

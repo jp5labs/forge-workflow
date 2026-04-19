@@ -37,6 +37,37 @@ def _content_hash(content: str) -> str:
     return hashlib.sha256(content.encode()).hexdigest()
 
 
+def bootstrap_hashes(repo_root: Path) -> int:
+    """Seed skill-hashes.json from current local skills if no hash file exists.
+
+    When a repo pre-dates hash tracking, all local skills appear MODIFIED
+    (no known hash to compare against), causing --rescaffold-skills to skip
+    everything. This seeds the hash file from current local content so that
+    unchanged skills register as UNMODIFIED and receive upstream updates.
+
+    Returns the number of skills hashed, or 0 if the hash file already exists.
+    """
+    hash_path = repo_root / ".forge" / "skill-hashes.json"
+    if hash_path.is_file():
+        return 0
+
+    skills_dir = repo_root / ".claude" / "skills"
+    if not skills_dir.is_dir():
+        return 0
+
+    hashes: dict[str, str] = {}
+    for skill_dir in sorted(skills_dir.iterdir()):
+        if not skill_dir.is_dir():
+            continue
+        skill_file = skill_dir / "SKILL.md"
+        if skill_file.is_file():
+            hashes[skill_dir.name] = _content_hash(skill_file.read_text())
+
+    if hashes:
+        _save_hashes(repo_root, hashes)
+    return len(hashes)
+
+
 def check_skill_status(
     repo_root: Path, skill_name: str, upstream_content: str
 ) -> SkillStatus:

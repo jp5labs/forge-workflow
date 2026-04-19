@@ -1,0 +1,6 @@
+# Force LF line endings for all text files
+* text=auto eol=lf
+
+# Explicitly mark scripts and Dockerfiles
+*.sh text eol=lf
+Dockerfile text eol=lf

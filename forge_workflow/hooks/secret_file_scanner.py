@@ -17,6 +17,8 @@ import re
 import sys
 from datetime import datetime, timezone
 
+from forge_workflow.hooks._repo_root import REPO_ROOT
+
 # Secret patterns - synced with secret_detection.py
 SECRET_PATTERNS = [
     # Explicit key-value patterns
@@ -80,13 +82,13 @@ SKIP_PATTERNS = [
     r"vault-conventions\.md$",
     r"\.claude/rules/.*\.md$",  # Rule documentation
     r"\.claude/skills/.*\.md$",  # Skill documentation
+    r"\.forge/scripts/.*",  # Forge-managed scripts
     r"scripts/hooks/.*\.py$",  # Hook scripts themselves
     r"forge_workflow/hooks/.*\.py$",  # Hook modules themselves
     r"docs/plans/.*\.md$",  # Implementation plans contain code examples, not secrets
     r"Pattern - NFR Sample.*\.md$",  # NFR samples reference AWS Secrets Manager, not actual secrets
 ]
 
-REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 CB_STATE_DIR = os.path.join(REPO_ROOT, "tmp", "circuit-breaker-state")
 CB_HALT_FILE = os.path.join(REPO_ROOT, "tmp", "circuit-breaker-halt.json")
 SECRET_ESCALATION_THRESHOLD = 3

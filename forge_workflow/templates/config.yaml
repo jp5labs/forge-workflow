@@ -15,4 +15,30 @@ notifications:
     enabled: false
 
 hooks:
+  # Mode: "autonomous" wires safety hooks via settings.local.json;
+  # "supervised" leaves settings.local.json empty (manual approval).
   mode: supervised
+
+  # Settings generator: path to a custom script, or omit to use
+  # forge-workflow's built-in generator (python -m forge_workflow.lib.settings_generator).
+  # The built-in generator merges forge safety hooks into any existing
+  # settings.local.json without overwriting other settings.
+  # settings_generator: /workspace/.forge/scripts/generate-settings-local.py
+
+  # Statusline script: path to a shell script that renders the Claude Code
+  # status bar. Omit to use the convention path (.forge/scripts/statusline-command.sh).
+  # forge init scaffolds a default script at that path.
+  # statusline_script: .forge/scripts/statusline-command.sh
+
+  # Custom hooks: additional hook entries merged alongside forge safety hooks.
+  # Each entry needs an event name and command. Matcher is optional.
+  # These let repos add project-specific hooks (notifications, custom checks)
+  # without forking the settings generator.
+  # custom:
+  #   - event: Notification
+  #     command: "bash .forge/scripts/hooks/notify.sh notification"
+  #   - event: PreToolUse
+  #     matcher: Bash
+  #     command: "bash .forge/scripts/hooks/cancel-notify.sh"
+  #   - event: SessionStart
+  #     command: "bash .forge/scripts/hooks/notify.sh session-start"

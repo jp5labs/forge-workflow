@@ -26,6 +26,11 @@ tmp/
 # Forge local config
 .forge/config.local.yaml
 
+# Environment and local settings
+*.env
+*.local.json
+settings.local.json
+
 # OS
 .DS_Store
 Thumbs.db
