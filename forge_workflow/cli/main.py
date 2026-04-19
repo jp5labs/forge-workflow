@@ -15,6 +15,7 @@ from forge_workflow.cli import (
     config_cmd,
     doctor,
     init_cmd,
+    pin_cmd,
     self_update,
     update_skills_cmd,
 )
@@ -67,6 +68,7 @@ app.add_typer(
 )
 app.command("self-update")(self_update.self_update)
 app.command()(doctor.doctor)
+app.command()(pin_cmd.pin)
 
 
 if __name__ == "__main__":

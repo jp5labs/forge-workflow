@@ -134,7 +134,16 @@ def doctor() -> None:
         else:
             _check("Managed doc sections", True, "present")
 
-    # 7. Version check (always force-check, not cached)
+    # 7. pyproject.toml pin drift
+    if exists and cfg_path:
+        repo_root = cfg_path.parent.parent
+        pin_result = _check_pin_drift(repo_root)
+        if pin_result is not None:
+            passed, detail = pin_result
+            if not _check("pyproject.toml pin", passed, detail):
+                all_passed = False
+
+    # 8. Version check (always force-check, not cached)
     try:
         from forge_workflow import __version__
         from forge_workflow.lib.version_check import check_for_update
@@ -188,3 +197,38 @@ def _check_managed_docs(root: object = None) -> list[str]:
                 )
 
     return issues
+
+
+def _check_pin_drift(root: object = None) -> tuple[bool, str] | None:
+    """Compare installed forge-workflow version against pyproject.toml pin.
+
+    Returns (passed, detail) or None if no pin is found.
+    """
+    import re
+    from pathlib import Path
+
+    from forge_workflow import __version__
+    from forge_workflow.lib.version_check import REPO_URL
+
+    repo_root = Path(str(root)) if root else Path.cwd()
+    pyproject = repo_root / "pyproject.toml"
+    if not pyproject.is_file():
+        return None
+
+    content = pyproject.read_text()
+    pattern = re.compile(
+        r'forge-workflow\s*@\s*git\+' + re.escape(REPO_URL) + r'@([^\s"\'#]+)'
+    )
+    match = pattern.search(content)
+    if not match:
+        return None
+
+    pinned_ref = match.group(1)
+    pinned = pinned_ref[1:] if pinned_ref.startswith("v") else pinned_ref
+    if pinned == __version__:
+        return True, f"{pinned_ref} (matches installed)"
+
+    return False, (
+        f"pinned {pinned_ref}, installed v{__version__} "
+        f"— run 'forge pin' to update"
+    )
